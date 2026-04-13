@@ -177,6 +177,12 @@
         tr:hover {
             background: rgba(255, 255, 255, 0.05);
         }
+        tr.upcoming-contest {
+            background: rgba(108, 92, 231, 0.15);
+        }
+        tr.upcoming-contest:hover {
+            background: rgba(108, 92, 231, 0.25);
+        }
         .contest-header {
             display: flex;
             flex-direction: column;
@@ -478,7 +484,9 @@
             globalUsers.forEach(u => { html += `<th>${u.name}</th>`; });
             html += '</tr></thead><tbody>';
             globalContests.forEach(c => {
-                html += `<tr>`;
+                const isUpcoming = c.time && new Date(c.time) > new Date();
+                const rowClass = isUpcoming ? ' class="upcoming-contest"' : '';
+                html += `<tr${rowClass}>`;
                 const linkHtml = c.link ? `<a class="contest-link" href="${c.link}" target="_blank">🔗 前往比赛页面</a>` : '';
                 const timeHtml = c.time ? `<div class="contest-time">${c.time.replace('T', ' ')}</div>` : '';
                 const contestName = c.name || c.description;
