@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, send_from_directory
 import requests
 import json
 import time
@@ -235,6 +235,11 @@ def refresh_contest(contest_id):
     save_json(CONTESTS_FILE, contests)
     
     return jsonify({'status': 'ok', 'results': results})
+
+@app.route('/logo.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path),
+                               'logo.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
