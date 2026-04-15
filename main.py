@@ -4,6 +4,8 @@ import json
 import time
 import os
 import uuid
+import threading
+from datetime import datetime, timedelta
 from functools import wraps
 
 app = Flask(__name__, template_folder='.')
@@ -97,6 +99,82 @@ def check_nowcoder(contest_id, user_id):
     except:
         pass
     return False
+
+def _do_refresh_contest(contest_id):
+    contests = load_json(CONTESTS_FILE, [])
+    if isinstance(contests, dict):
+        contests = []
+    users = load_json(USERS_FILE, [])
+    if isinstance(users, dict):
+        users = []
+    
+    target_contest = next((c for c in contests if c.get('id') == contest_id), None)
+    if not target_contest:
+        return False
+        
+    platform = target_contest.get('platform', '').lower()
+    cid = target_contest.get('contest_id', '')
+    
+    old_results = target_contest.get('results', {})
+    results = {}
+    for user in users:
+        user_id = user.get('id')
+        if old_results.get(user_id) is True:
+            results[user_id] = True
+            continue
+            
+        participated = False
+        if platform == 'codeforces':
+            participated = check_codeforces(cid, user.get('codeforces', ''))
+        elif platform == 'atcoder':
+            participated = check_atcoder(cid, user.get('atcoder', ''))
+        elif platform == 'nowcoder' or platform == 'cowcoder' or platform == '牛客':
+            participated = check_nowcoder(cid, user.get('nowcoder', ''))
+            
+        results[user_id] = participated
+        
+    target_contest['results'] = results
+    save_json(CONTESTS_FILE, contests)
+    return True
+
+def run_daily_refresh():
+    contests = load_json(CONTESTS_FILE, [])
+    if isinstance(contests, dict):
+        contests = []
+    now = datetime.now()
+    
+    past_contests = []
+    for c in contests:
+        time_str = c.get('time')
+        if time_str:
+            try:
+                c_time = datetime.strptime(time_str, '%Y-%m-%d %H:%M')
+                if c_time <= now:
+                    past_contests.append((c_time, c))
+            except ValueError:
+                pass
+                
+    past_contests.sort(key=lambda x: x[0], reverse=True)
+    top_20 = past_contests[:20]
+
+    for _, c in top_20:
+        _do_refresh_contest(c.get('id'))
+        time.sleep(10)
+
+def background_job():
+    while True:
+        now = datetime.now()
+        next_run = now.replace(hour=3, minute=0, second=0, microsecond=0)
+        if now >= next_run:
+            next_run += timedelta(days=1)
+        sleep_seconds = (next_run - now).total_seconds()
+        time.sleep(sleep_seconds)
+        try:
+            run_daily_refresh()
+        except Exception as e:
+            print(f"[❌] Scheduled task error: {e}")
+
+threading.Thread(target=background_job, daemon=True).start()
 
 def require_auth(f):
     @wraps(f)
@@ -205,36 +283,13 @@ def delete_contest(contest_id):
 @app.route('/api/refresh/<contest_id>', methods=['POST'])
 @require_auth
 def refresh_contest(contest_id):
-    contests = load_json(CONTESTS_FILE, [])
-    if isinstance(contests, dict):
-        contests = []
-    users = load_json(USERS_FILE, [])
-    if isinstance(users, dict):
-        users = []
-    
-    target_contest = next((c for c in contests if c.get('id') == contest_id), None)
-    if not target_contest:
+    success = _do_refresh_contest(contest_id)
+    if not success:
         return jsonify({'error': 'Not found'}), 404
         
-    platform = target_contest.get('platform', '').lower()
-    cid = target_contest.get('contest_id', '')
-    
-    results = {}
-    for user in users:
-        participated = False
-        if platform == 'codeforces':
-            participated = check_codeforces(cid, user.get('codeforces', ''))
-        elif platform == 'atcoder':
-            participated = check_atcoder(cid, user.get('atcoder', ''))
-        elif platform == 'nowcoder' or platform == 'cowcoder' or platform == '牛客':
-            participated = check_nowcoder(cid, user.get('nowcoder', ''))
-            
-        results[user.get('id')] = participated
-        
-    target_contest['results'] = results
-    save_json(CONTESTS_FILE, contests)
-    
-    return jsonify({'status': 'ok', 'results': results})
+    contests = load_json(CONTESTS_FILE, [])
+    target_contest = next((c for c in contests if c.get('id') == contest_id), None)
+    return jsonify({'status': 'ok', 'results': target_contest.get('results', {})})
 
 @app.route('/logo.ico')
 def favicon():
