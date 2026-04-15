@@ -138,8 +138,8 @@
             "fa4689cb-a947-4b9d-aea9-c94254a72b50": true,
             "54b863e5-888a-43c8-ad1a-81473ca23178": false,
             "45f49cc0-f13a-4f99-acab-d69e6e79c2d8": false,
-            "6dcbea96-698e-46d3-8982-97cd4a6840c8": false,
-            "3624ea8b-d78d-4ffb-a70e-e8040309115b": false,
+            "6dcbea96-698e-46d3-8982-97cd4a6840c8": true,
+            "3624ea8b-d78d-4ffb-a70e-e8040309115b": true,
             "9e6f852e-64a1-4b6f-b8fd-26397d76b5fd": false
         }
     },
@@ -151,7 +151,7 @@
         "link": "https://ac.nowcoder.com/acm/contest/131539",
         "id": "3ba24e3f-53bb-4960-9e88-b7701d7c84c5",
         "results": {
-            "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
+            "81d6601b-34d2-4bae-83ca-eee25e9ff175": true,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": true,
             "83face24-93b5-47ba-bc8a-532a50258b2d": true,
@@ -175,7 +175,7 @@
         "link": "https://codeforces.com/contests/2220",
         "id": "c13f642a-53b6-475f-8f6b-b6085a8d285b",
         "results": {
-            "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
+            "81d6601b-34d2-4bae-83ca-eee25e9ff175": true,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
             "83face24-93b5-47ba-bc8a-532a50258b2d": false,
