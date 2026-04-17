@@ -59,11 +59,11 @@ def check_codeforces(contest_id, handle):
         print(f"[❌] error: {e}")
         return False
 
-def check_atcoder(contest_id, user_id):
+def check_atcoder(contest_id, user_id, from_second=0):
     url = "https://kenkoooo.com/atcoder/atcoder-api/v3/user/submissions"
     params = {
         "user": user_id,
-        "from_second": 0
+        "from_second": from_second
     }
     headers = {
         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -115,6 +115,16 @@ def _do_refresh_contest(contest_id):
     platform = target_contest.get('platform', '').lower()
     cid = target_contest.get('contest_id', '')
     
+    from_second = 0
+    time_str = target_contest.get('time')
+    if time_str:
+        try:
+            c_time = datetime.strptime(time_str, '%Y-%m-%d %H:%M')
+            from_time = c_time - timedelta(days=1)
+            from_second = int(from_time.timestamp())
+        except ValueError:
+            pass
+    
     old_results = target_contest.get('results', {})
     results = {}
     for user in users:
@@ -127,7 +137,7 @@ def _do_refresh_contest(contest_id):
         if platform == 'codeforces':
             participated = check_codeforces(cid, user.get('codeforces', ''))
         elif platform == 'atcoder':
-            participated = check_atcoder(cid, user.get('atcoder', ''))
+            participated = check_atcoder(cid, user.get('atcoder', ''), from_second)
         elif platform == 'nowcoder' or platform == 'cowcoder' or platform == '牛客':
             participated = check_nowcoder(cid, user.get('nowcoder', ''))
             
