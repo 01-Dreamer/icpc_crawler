@@ -155,16 +155,16 @@ def run_daily_refresh():
                 pass
                 
     past_contests.sort(key=lambda x: x[0], reverse=True)
-    top_20 = past_contests[:20]
+    top_inf = past_contests
 
-    for _, c in top_20:
+    for _, c in top_inf:
         _do_refresh_contest(c.get('id'))
         time.sleep(10)
 
 def background_job():
     while True:
         now = datetime.now()
-        next_run = now.replace(hour=3, minute=0, second=0, microsecond=0)
+        next_run = now.replace(hour=5, minute=0, second=0, microsecond=0)
         if now >= next_run:
             next_run += timedelta(days=1)
         sleep_seconds = (next_run - now).total_seconds()
