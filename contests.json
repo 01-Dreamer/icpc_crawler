@@ -207,6 +207,7 @@
         "link": "https://codeforces.com/contest/2184",
         "id": "8c2034cf-4eb3-44c4-88c6-71b769a038a2",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": true,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -231,6 +232,7 @@
         "link": "https://codeforces.com/contest/2191",
         "id": "b7501d49-48de-424a-999d-71501bf5f8d9",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": true,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -255,6 +257,7 @@
         "link": "https://codeforces.com/contest/2189",
         "id": "edea20e5-a1ae-43e8-8bea-b260b43e1b60",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": true,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": true,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": true,
@@ -279,9 +282,10 @@
         "link": "https://codeforces.com/contest/2193",
         "id": "bb4a274f-ee6e-4721-a998-2101ff69233d",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": true,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": true,
-            "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
+            "0ace2f3d-1296-4ab0-aaf0-da088e685326": true,
             "83face24-93b5-47ba-bc8a-532a50258b2d": false,
             "f55f4c28-3d0c-4336-8d7f-f1cfdd3c4c1f": false,
             "68a5e922-ad70-4984-afe5-5839531d06e9": false,
@@ -303,6 +307,7 @@
         "link": "https://codeforces.com/contest/2188",
         "id": "62943669-b8e8-49a2-981a-21e12cbbb497",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": true,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": true,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -327,6 +332,7 @@
         "link": "https://codeforces.com/contest/2194",
         "id": "fa363cd3-c389-4ba7-95c8-b2f8bd7f26ec",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": true,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": true,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -351,6 +357,7 @@
         "link": "https://codeforces.com/contest/2197",
         "id": "5b9ca523-68a4-4e7b-8e26-79bab4e7f14d",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": true,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -675,6 +682,7 @@
         "link": "https://atcoder.jp/contests/abc439",
         "id": "7b6dc288-6d89-486e-831c-117fca4e7606",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": true,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -699,6 +707,7 @@
         "link": "https://atcoder.jp/contests/abc440",
         "id": "a9d6f675-bbad-4a0a-9be8-ea30ccf242fd",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": true,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -723,6 +732,7 @@
         "link": "https://atcoder.jp/contests/abc441",
         "id": "f99abe1a-a3fa-4082-883a-c8222e66412e",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -747,6 +757,7 @@
         "link": "https://atcoder.jp/contests/abc442",
         "id": "5bd6c43a-a47d-40f4-9bfb-5c1d27a2c601",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -771,6 +782,7 @@
         "link": "https://atcoder.jp/contests/abc443",
         "id": "8322efed-1e8b-47c1-9a78-986dc8d695cb",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": true,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": true,
@@ -795,6 +807,7 @@
         "link": "https://atcoder.jp/contests/abc444",
         "id": "520e29f2-44b6-464c-a930-17b55ef66103",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -844,7 +857,7 @@
         "link": "https://atcoder.jp/contests/abc446",
         "id": "f2e8dde2-dfd4-4442-943d-c0bb79d77cb8",
         "results": {
-            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": true,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -969,7 +982,7 @@
         "link": "https://atcoder.jp/contests/abc451",
         "id": "2f17d8e8-cb15-4c1f-9a91-c6484f6d5669",
         "results": {
-            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": true,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": true,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": true,
@@ -994,6 +1007,7 @@
         "link": "https://ac.nowcoder.com/acm/contest/126319",
         "id": "32329dcf-26ba-42c2-9aaf-867dd52ec2e0",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -1018,6 +1032,7 @@
         "link": "https://ac.nowcoder.com/acm/contest/126636",
         "id": "88d01556-7e26-40a6-acd8-61c33de31b52",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -1042,6 +1057,7 @@
         "link": "https://ac.nowcoder.com/acm/contest/126798",
         "id": "84317ed4-1de6-4073-98af-a534444cc175",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -1066,6 +1082,7 @@
         "link": "https://ac.nowcoder.com/acm/contest/127240",
         "id": "51366b77-9758-478f-a21c-1d6792957b7d",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -1090,6 +1107,7 @@
         "link": "https://ac.nowcoder.com/acm/contest/127264",
         "id": "24748e2d-1369-4f8e-b50d-73db57c5ff56",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": true,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
@@ -1114,6 +1132,7 @@
         "link": "https://ac.nowcoder.com/acm/contest/127702",
         "id": "9bfedea5-c6b2-4652-9b9f-56a390825369",
         "results": {
+            "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
             "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
