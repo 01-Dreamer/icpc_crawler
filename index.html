@@ -636,6 +636,39 @@
             return ratings[platform] || 0;
         }
 
+        function getRatingColor(rating, platform) {
+            rating = parseInt(rating);
+            if (isNaN(rating) || rating <= 0) return '#808080';
+            switch (platform.toLowerCase()) {
+                case 'atcoder':
+                    if (rating >= 2800) return '#FF0000';
+                    if (rating >= 2400) return '#FF8000';
+                    if (rating >= 2000) return '#C0C000';
+                    if (rating >= 1600) return '#0000FF';
+                    if (rating >= 1200) return '#00C0C0';
+                    if (rating >= 800)  return '#008000';
+                    if (rating >= 400)  return '#804000';
+                    return '#808080';
+                case 'nowcoder':
+                    if (rating >= 2800) return '#FE4C61';
+                    if (rating >= 2400) return '#FFC116';
+                    if (rating >= 2000) return '#9D3DCF';
+                    if (rating >= 1600) return '#3491FA';
+                    if (rating >= 1200) return '#05C5DB';
+                    if (rating >= 800)  return '#5EB95E';
+                    return '#999999';
+                case 'cf':
+                default:
+                    if (rating >= 2400) return '#FF0000';
+                    if (rating >= 2100) return '#FF8C00';
+                    if (rating >= 1900) return '#AA00AA';
+                    if (rating >= 1600) return '#0000FF';
+                    if (rating >= 1400) return '#03A89E';
+                    if (rating >= 1200) return '#008000';
+                    return '#808080';
+            }
+        }
+
         function renderPending() {
             const tbody = document.getElementById('pendingBody');
             tbody.innerHTML = '';
@@ -736,15 +769,15 @@
                             </div>
                         </td>` : '';
                         
-                const cfDisplay = u.codeforces ? `<a href="https://codeforces.com/profile/${u.codeforces}" target="_blank" style="color: var(--text-color);">${u.codeforces}</a>` : '-';
-                const acDisplay = u.atcoder ? `<a href="https://atcoder.jp/users/${u.atcoder}" target="_blank" style="color: var(--text-color);">${u.atcoder}</a>` : '-';
-                const ncDisplay = u.nowcoder ? `<a href="https://ac.nowcoder.com/acm/contest/rating-index?searchUserName=${u.nowcoder}" target="_blank" style="color: var(--text-color);">${u.nowcoder}</a>` : '-';
+                const cfDisplay = u.codeforces ? `<a href="https://codeforces.com/profile/${u.codeforces}" target="_blank" style="color: var(--text-color);">${u.codeforces} <span style="color:${getRatingColor(codeforces, 'cf')};font-size:0.85em;font-weight:bold;">(${codeforces})</span></a>` : '-';
+                const acDisplay = u.atcoder ? `<a href="https://atcoder.jp/users/${u.atcoder}" target="_blank" style="color: var(--text-color);">${u.atcoder} <span style="color:${getRatingColor(atcoder, 'atcoder')};font-size:0.85em;font-weight:bold;">(${atcoder})</span></a>` : '-';
+                const ncDisplay = u.nowcoder ? `<a href="https://ac.nowcoder.com/acm/contest/rating-index?searchUserName=${u.nowcoder}" target="_blank" style="color: var(--text-color);">${u.nowcoder} <span style="color:${getRatingColor(nowcoder, 'nowcoder')};font-size:0.85em;font-weight:bold;">(${nowcoder})</span></a>` : '-';
 
                 tbody.innerHTML += `
                     <tr>
                         ${sortingHtml}
                         <td style="text-align: left;">${u.name}</td>
-                        <td>${total}</td>
+                        <td style="color:#00d2d1;font-weight:bold;">${total}</td>
                         <td>${cfDisplay}</td>
                         <td>${acDisplay}</td>
                         <td>${ncDisplay}</td>
