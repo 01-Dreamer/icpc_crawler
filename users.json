@@ -1,5 +1,5 @@
 [
-	{
+    {
         "name": "毕洲铭",
         "codeforces": "False0099",
         "atcoder": "False0099",
@@ -45,7 +45,7 @@
         "name": "姜凡",
         "codeforces": "LuckyFan",
         "atcoder": "LuckyFan",
-        "nowcoder": "LuckyFan",
+        "nowcoder": "lucky_fan",
         "id": "68a5e922-ad70-4984-afe5-5839531d06e9"
     },
     {
@@ -91,18 +91,17 @@
         "id": "6dcbea96-698e-46d3-8982-97cd4a6840c8"
     },
     {
-        "name": "王宜禾",
-        "codeforces": "TanukiLover21",
-        "atcoder": "Zangoose",
-        "nowcoder": "砂糖遍地电影街",
-        "id": "3624ea8b-d78d-4ffb-a70e-e8040309115b"
-    },
-    {
         "name": "蔡浩然",
         "codeforces": "CHaiR-man2007",
         "atcoder": "caihaoman",
         "nowcoder": "caihaoman",
         "id": "9e6f852e-64a1-4b6f-b8fd-26397d76b5fd"
+    },
+    {
+        "name": "王宜禾",
+        "codeforces": "TanukiLover21",
+        "atcoder": "Zangoose",
+        "nowcoder": "砂糖遍地电影街",
+        "id": "3624ea8b-d78d-4ffb-a70e-e8040309115b"
     }
 ]
-

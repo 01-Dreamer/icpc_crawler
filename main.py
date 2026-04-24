@@ -7,12 +7,16 @@ import uuid
 import threading
 from datetime import datetime, timedelta
 from functools import wraps
+from bs4 import BeautifulSoup
+import re
 
 app = Flask(__name__, template_folder='.')
 app.secret_key = 'icpc_secret_key_admin'
 
 USERS_FILE = 'users.json'
 CONTESTS_FILE = 'contests.json'
+RATINGS_FILE = 'ratings.json'
+PENDING_FILE = 'pending.json'
 
 def load_json(filepath, default_val=None):
     if default_val is None:
@@ -32,6 +36,101 @@ def save_json(filepath, data):
 
 load_json(USERS_FILE)
 load_json(CONTESTS_FILE)
+load_json(RATINGS_FILE, {})
+load_json(PENDING_FILE, [])
+
+def get_nowcoder_rating(nickname):
+    url = "https://ac.nowcoder.com/acm/contest/rating-index"
+    params = {"searchUserName": nickname}
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://ac.nowcoder.com/acm/contest/rating-index'
+    }
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=10)
+        if response.status_code != 200:
+            return None
+        soup = BeautifulSoup(response.text, "html.parser")
+        rows = soup.find_all("tr")
+        for row in rows:
+            if nickname.lower() in row.text.lower():
+                cols = row.find_all("td")
+                if len(cols) >= 3:
+                    rating_text = cols[-1].get_text(strip=True)
+                    match = re.search(r'\d+', rating_text)
+                    if match:
+                        return int(match.group())
+        alt_rating = soup.find("span", class_=re.compile("user-rating-rank|rating-score"))
+        if alt_rating:
+            return int(re.search(r'\d+', alt_rating.text).group())
+    except Exception as e:
+        print(f"Error: {e}")
+    return None
+
+def get_codeforces_rating(handle):
+    if not handle: return None
+    url = f"https://codeforces.com/api/user.info?handles={handle}"
+    try:
+        res = requests.get(url, timeout=10).json()
+        if res["status"] == "OK":
+            return res["result"][0].get("rating")
+    except Exception as e:
+        print(f"Error: {e}")
+    return None
+
+def get_atcoder_rating(handle):
+    if not handle: return None
+    url = f"https://atcoder.jp/users/{handle}/history/json"
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    try:
+        res = requests.get(url, headers=headers, timeout=10)
+        if res.status_code == 200:
+            data = res.json()
+            return data[-1].get("NewRating") if data else 0
+    except Exception as e:
+        print(f"Error: {e}")
+    return None
+
+def update_all_ratings():
+    users = load_json(USERS_FILE, [])
+    if isinstance(users, dict):
+        users = []
+    ratings = load_json(RATINGS_FILE, {})
+    if not isinstance(ratings, dict):
+        ratings = {}
+        
+    for user in users:
+        user_id = user.get('id')
+        if user_id not in ratings:
+            ratings[user_id] = {}
+        
+        time.sleep(1)
+        cf_handle = user.get('codeforces')
+        if cf_handle:
+            cf_val = get_codeforces_rating(cf_handle)
+            ratings[user_id]['codeforces'] = cf_val if cf_val is not None else 0
+        else:
+            ratings[user_id]['codeforces'] = 0
+                
+        time.sleep(1)
+        ac_handle = user.get('atcoder')
+        if ac_handle:
+            ac_val = get_atcoder_rating(ac_handle)
+            ratings[user_id]['atcoder'] = ac_val if ac_val is not None else 0
+        else:
+            ratings[user_id]['atcoder'] = 0
+                
+        time.sleep(1)
+        nc_handle = user.get('nowcoder')
+        if nc_handle:
+            nc_val = get_nowcoder_rating(nc_handle)
+            ratings[user_id]['nowcoder'] = nc_val if nc_val is not None else 0
+        else:
+            ratings[user_id]['nowcoder'] = 0
+            
+        time.sleep(10)
+                
+    save_json(RATINGS_FILE, ratings)
 
 def check_codeforces(contest_id, handle):
     url = "https://codeforces.com/api/contest.status"
@@ -53,10 +152,10 @@ def check_codeforces(contest_id, handle):
                 return True
             return False
         else:
-            print(f"[❌] error: {data.get('comment')}")
+            print(f"error: {data.get('comment')}")
             return False
     except Exception as e:
-        print(f"[❌] error: {e}")
+        print(f"error: {e}")
         return False
 
 def check_atcoder(contest_id, user_id, from_second=0):
@@ -78,11 +177,11 @@ def check_atcoder(contest_id, user_id, from_second=0):
                 return True
             return False
         else:
-            print(f"[❌] error, status: {response.status_code}")
+            print(f"error, status: {response.status_code}")
             return False
             
     except Exception as e:
-        print(f"[❌] error: {e}")
+        print(f"error: {e}")
         return False
 
 def check_nowcoder(contest_id, user_id):
@@ -170,6 +269,11 @@ def run_daily_refresh():
     for _, c in top_inf:
         _do_refresh_contest(c.get('id'))
         time.sleep(10)
+        
+    try:
+        update_all_ratings()
+    except Exception as e:
+        print(f"Error updating ratings: {e}")
 
 def background_job():
     while True:
@@ -182,7 +286,7 @@ def background_job():
         try:
             run_daily_refresh()
         except Exception as e:
-            print(f"[❌] Scheduled task error: {e}")
+            print(f"Scheduled task error: {e}")
 
 threading.Thread(target=background_job, daemon=True).start()
 
@@ -223,10 +327,65 @@ def get_data():
     contests = load_json(CONTESTS_FILE, [])
     if isinstance(contests, dict):
         contests = []
+    ratings = load_json(RATINGS_FILE, {})
+    if not isinstance(ratings, dict):
+        ratings = {}
+    pending = []
+    if session.get('logged_in'):
+        pending = load_json(PENDING_FILE, [])
+        if isinstance(pending, dict):
+            pending = []
     return jsonify({
         'users': users,
-        'contests': contests
+        'contests': contests,
+        'ratings': ratings,
+        'pending': pending
     })
+
+@app.route('/api/apply', methods=['POST'])
+def apply_join():
+    pending = load_json(PENDING_FILE, [])
+    if isinstance(pending, dict):
+        pending = []
+    data = request.json
+    data['id'] = str(uuid.uuid4())
+    data['time'] = datetime.now().strftime('%Y-%m-%d %H:%M')
+    pending.append(data)
+    save_json(PENDING_FILE, pending)
+    return jsonify({'status': 'ok'})
+
+@app.route('/api/pending/<req_id>/approve', methods=['POST'])
+@require_auth
+def approve_join(req_id):
+    pending = load_json(PENDING_FILE, [])
+    if isinstance(pending, dict): pending = []
+    users = load_json(USERS_FILE, [])
+    if isinstance(users, dict): users = []
+    
+    target = next((p for p in pending if p.get('id') == req_id), None)
+    if not target:
+        return jsonify({'error': 'Not found'}), 404
+        
+    pending = [p for p in pending if p.get('id') != req_id]
+    save_json(PENDING_FILE, pending)
+    
+    target.pop('time', None)
+    users.append(target)
+    save_json(USERS_FILE, users)
+    return jsonify({'status': 'ok'})
+
+@app.route('/api/pending/<req_id>/reject', methods=['POST'])
+@require_auth
+def reject_join(req_id):
+    pending = load_json(PENDING_FILE, [])
+    if isinstance(pending, dict): pending = []
+    target = next((p for p in pending if p.get('id') == req_id), None)
+    if not target:
+        return jsonify({'error': 'Not found'}), 404
+        
+    pending = [p for p in pending if p.get('id') != req_id]
+    save_json(PENDING_FILE, pending)
+    return jsonify({'status': 'ok'})
 
 @app.route('/api/users', methods=['POST'])
 @require_auth
@@ -267,6 +426,73 @@ def update_user(user_id):
     save_json(USERS_FILE, users)
     return jsonify({'status': 'ok'})
 
+@app.route('/api/users/<user_id>/move', methods=['POST'])
+@require_auth
+def move_user(user_id):
+    users = load_json(USERS_FILE, [])
+    if isinstance(users, dict):
+        users = []
+    
+    direction = request.json.get('direction')
+    
+    idx = -1
+    for i, u in enumerate(users):
+        if u.get('id') == user_id:
+            idx = i
+            break
+            
+    if idx == -1:
+        return jsonify({'error': 'Not found'}), 404
+        
+    if direction == 'up' and idx > 0:
+        users[idx], users[idx-1] = users[idx-1], users[idx]
+    elif direction == 'down' and idx < len(users) - 1:
+        users[idx], users[idx+1] = users[idx+1], users[idx]
+        
+    save_json(USERS_FILE, users)
+    return jsonify({'status': 'ok'})
+
+@app.route('/api/users/<user_id>/refresh', methods=['POST'])
+@require_auth
+def refresh_user_rating(user_id):
+    users = load_json(USERS_FILE, [])
+    if isinstance(users, dict):
+        users = []
+    target_user = next((u for u in users if u.get('id') == user_id), None)
+    if not target_user:
+        return jsonify({'error': 'Not found'}), 404
+        
+    ratings = load_json(RATINGS_FILE, {})
+    if not isinstance(ratings, dict):
+        ratings = {}
+        
+    if user_id not in ratings:
+        ratings[user_id] = {}
+        
+    cf_handle = target_user.get('codeforces')
+    if cf_handle:
+        cf_val = get_codeforces_rating(cf_handle)
+        ratings[user_id]['codeforces'] = cf_val if cf_val is not None else 0
+    else:
+        ratings[user_id]['codeforces'] = 0
+            
+    ac_handle = target_user.get('atcoder')
+    if ac_handle:
+        ac_val = get_atcoder_rating(ac_handle)
+        ratings[user_id]['atcoder'] = ac_val if ac_val is not None else 0
+    else:
+        ratings[user_id]['atcoder'] = 0
+            
+    nc_handle = target_user.get('nowcoder')
+    if nc_handle:
+        nc_val = get_nowcoder_rating(nc_handle)
+        ratings[user_id]['nowcoder'] = nc_val if nc_val is not None else 0
+    else:
+        ratings[user_id]['nowcoder'] = 0
+            
+    save_json(RATINGS_FILE, ratings)
+    return jsonify({'status': 'ok', 'ratings': ratings[user_id]})
+
 @app.route('/api/contests', methods=['POST'])
 @require_auth
 def add_contest():
@@ -300,6 +526,15 @@ def refresh_contest(contest_id):
     contests = load_json(CONTESTS_FILE, [])
     target_contest = next((c for c in contests if c.get('id') == contest_id), None)
     return jsonify({'status': 'ok', 'results': target_contest.get('results', {})})
+
+@app.route('/api/ratings/refresh', methods=['POST'])
+@require_auth
+def refresh_ratings_api():
+    try:
+        update_all_ratings()
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/logo.ico')
 def favicon():

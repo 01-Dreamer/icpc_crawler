@@ -245,9 +245,38 @@
         </div>
     </h1>
     <div class="container">
-        <div class="panel admin-only" style="display: none;">
-            <h2>队员管理</h2>
+        <div class="panel user-only" id="applyPanel" style="display: block;">
+            <h2>加入队伍申请</h2>
             <div class="form-group">
+                <input type="text" id="applyName" placeholder="你的姓名">
+                <input type="text" id="applyCfHandle" placeholder="Codeforces ID">
+                <input type="text" id="applyAcHandle" placeholder="AtCoder ID">
+                <input type="text" id="applyNcHandle" placeholder="牛客 ID">
+                <button onclick="applyJoin()">提交申请</button>
+            </div>
+            <p id="applyStatus" style="font-size: 13px; color: #00d2d1; display: none;">✅ 申请已提交，请等待管理员审核</p>
+        </div>
+        <div class="panel admin-only" id="pendingPanel" style="display: none;">
+            <h2>待审核</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">申请时间</th>
+                            <th>姓名</th>
+                            <th>Codeforces</th>
+                            <th>AtCoder</th>
+                            <th>牛客</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="panel">
+            <h2>队员情况</h2>
+            <div class="form-group admin-only" style="display: none;">
                 <input type="text" id="userName" placeholder="队员姓名">
                 <input type="text" id="cfHandle" placeholder="Codeforces ID">
                 <input type="text" id="acHandle" placeholder="AtCoder ID">
@@ -258,14 +287,40 @@
                 <table>
                     <thead>
                         <tr>
+                            <th class="admin-only" style="display: none; width: 60px;">排序</th>
                             <th style="text-align: left;">姓名</th>
-                            <th>Codeforces</th>
-                            <th>AtCoder</th>
-                            <th>牛客</th>
+                            <th style="cursor: pointer; user-select: none;" onclick="handleSort('total')" title="点击按三平台总分排序">
+                                总分 <span id="text-sort-total" style="font-size: 10px; color: #a0aec0; margin-left: 2px;">(默认)</span>
+                                <span style="display: inline-flex; flex-direction: column; font-size: 8px; line-height: 8px; vertical-align: middle; margin-left: 2px; color: #64748b;">
+                                    <span id="sort-total-up">▲</span>
+                                    <span id="sort-total-down">▼</span>
+                                </span>
+                            </th>
+                            <th style="cursor: pointer; user-select: none;" onclick="handleSort('codeforces')" title="点击按 Codeforces 排序">
+                                Codeforces <span id="text-sort-codeforces" style="font-size: 10px; color: #a0aec0; margin-left: 2px;">(默认)</span>
+                                <span style="display: inline-flex; flex-direction: column; font-size: 8px; line-height: 8px; vertical-align: middle; margin-left: 2px; color: #64748b;">
+                                    <span id="sort-codeforces-up">▲</span>
+                                    <span id="sort-codeforces-down">▼</span>
+                                </span>
+                            </th>
+                            <th style="cursor: pointer; user-select: none;" onclick="handleSort('atcoder')" title="点击按 AtCoder 排序">
+                                AtCoder <span id="text-sort-atcoder" style="font-size: 10px; color: #a0aec0; margin-left: 2px;">(默认)</span>
+                                <span style="display: inline-flex; flex-direction: column; font-size: 8px; line-height: 8px; vertical-align: middle; margin-left: 2px; color: #64748b;">
+                                    <span id="sort-atcoder-up">▲</span>
+                                    <span id="sort-atcoder-down">▼</span>
+                                </span>
+                            </th>
+                            <th style="cursor: pointer; user-select: none;" onclick="handleSort('nowcoder')" title="点击按 牛客 排序">
+                                牛客 <span id="text-sort-nowcoder" style="font-size: 10px; color: #a0aec0; margin-left: 2px;">(默认)</span>
+                                <span style="display: inline-flex; flex-direction: column; font-size: 8px; line-height: 8px; vertical-align: middle; margin-left: 2px; color: #64748b;">
+                                    <span id="sort-nowcoder-up">▲</span>
+                                    <span id="sort-nowcoder-down">▼</span>
+                                </span>
+                            </th>
                             <th class="admin-only" style="display: none;">操作</th>
                         </tr>
                     </thead>
-                    <tbody id="usersBody"></tbody>
+                    <tbody id="userBody"></tbody>
                 </table>
             </div>
         </div>
@@ -287,19 +342,71 @@
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://npmcdn.com/flatpickr/dist/l10n/zh.js"></script>
+
     <script>
-        flatpickr("#contestTime", {
-            enableTime: true,
-            dateFormat: "Y-m-d H:i",
-            locale: "zh",
-            time_24hr: true
-        });
         let globalUsers = [];
         let globalContests = [];
+        let globalRatings = {};
+        let globalPending = [];
         let editingUserId = null;
         let isAdmin = false;
+
+        let sortKey = null;
+        let sortDesc = true;
+
+        function handleSort(key) {
+            if (sortKey === key) {
+                if (sortDesc) {
+                    sortDesc = false;
+                } else {
+                    sortKey = null;
+                    sortDesc = true;
+                }
+            } else {
+                sortKey = key;
+                sortDesc = true;
+            }
+            updateSortIcons();
+            renderUsers();
+        }
+
+        function updateSortIcons() {
+            const keys = ['total', 'codeforces', 'atcoder', 'nowcoder'];
+            keys.forEach(k => {
+                const upEl = document.getElementById(`sort-${k}-up`);
+                const downEl = document.getElementById(`sort-${k}-down`);
+                const textEl = document.getElementById(`text-sort-${k}`);
+                
+                if (upEl && downEl) {
+                    upEl.style.color = '#64748b';
+                    downEl.style.color = '#64748b';
+                }
+                if (textEl) {
+                    textEl.innerText = '(默认)';
+                    textEl.style.color = '#a0aec0';
+                }
+            });
+            
+            if (sortKey) {
+                const upActiveColor = '#00d2d1';
+                const downActiveColor = '#00d2d1';
+                
+                const upEl = document.getElementById(`sort-${sortKey}-up`);
+                const downEl = document.getElementById(`sort-${sortKey}-down`);
+                const textEl = document.getElementById(`text-sort-${sortKey}`);
+                
+                if (upEl && downEl) {
+                    if (sortDesc) downEl.style.color = downActiveColor;
+                    else upEl.style.color = upActiveColor;
+                }
+                
+                if (textEl) {
+                    textEl.innerText = sortDesc ? '(降序)' : '(升序)';
+                    textEl.style.color = '#00d2d1';
+                }
+            }
+        }
+
         async function checkAuth() {
             try {
                 const res = await fetch('/api/check_auth');
@@ -347,19 +454,32 @@
             }
             const adminEls = document.querySelectorAll('.admin-only');
             adminEls.forEach(el => {
-                el.style.display = isAdmin ? (el.tagName === 'TH' || el.tagName === 'TD' ? 'table-cell' : 'block') : 'none';
+                if (el.tagName === 'TH' || el.tagName === 'TD') {
+                    el.style.display = isAdmin ? 'table-cell' : 'none';
+                } else if (el.classList.contains('form-group')) {
+                    el.style.display = isAdmin ? 'flex' : 'none';
+                } else {
+                    el.style.display = isAdmin ? 'block' : 'none';
+                }
+            });
+            const userEls = document.querySelectorAll('.user-only');
+            userEls.forEach(el => {
+                el.style.display = isAdmin ? 'none' : 'block';
             });
             if(document.getElementById('addContestGroup')) {
                 document.getElementById('addContestGroup').style.display = isAdmin ? 'flex' : 'none';
             }
             renderUsers();
             renderStats();
+            if (isAdmin) renderPending();
         }
         async function loadData() {
             const res = await fetch('/api/data');
             const data = await res.json();
             globalUsers = data.users || [];
             globalContests = data.contests || [];
+            globalRatings = data.ratings || {};
+            globalPending = data.pending || [];
             globalContests.sort((a, b) => {
                 const t1 = a.time ? new Date(a.time).getTime() : 0;
                 const t2 = b.time ? new Date(b.time).getTime() : 0;
@@ -367,6 +487,7 @@
             });
             renderUsers();
             renderStats();
+            if (isAdmin) renderPending();
         }
         async function addUser() {
             const name = document.getElementById('userName').value.trim();
@@ -385,8 +506,49 @@
             document.getElementById('ncHandle').value = '';
             loadData();
         }
+        
+        async function moveUser(id, direction) {
+            await fetch(`/api/users/${id}/move`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ direction: direction })
+            });
+            loadData();
+        }
+
         function editUser(id) { editingUserId = id; renderUsers(); }
         function cancelEdit() { editingUserId = null; renderUsers(); }
+        async function applyJoin() {
+            const name = document.getElementById('applyName').value.trim();
+            const cf = document.getElementById('applyCfHandle').value.trim();
+            const ac = document.getElementById('applyAcHandle').value.trim();
+            const nc = document.getElementById('applyNcHandle').value.trim();
+            if (!name) return alert("姓名不能为空");
+            
+            await fetch('/api/apply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, codeforces: cf, atcoder: ac, nowcoder: nc })
+            });
+            
+            document.getElementById('applyName').value = '';
+            document.getElementById('applyCfHandle').value = '';
+            document.getElementById('applyAcHandle').value = '';
+            document.getElementById('applyNcHandle').value = '';
+            
+            const msg = document.getElementById('applyStatus');
+            msg.style.display = 'block';
+            setTimeout(() => { msg.style.display = 'none'; }, 3000);
+        }
+        async function approveJoin(reqId) {
+            await fetch(`/api/pending/${reqId}/approve`, { method: 'POST' });
+            loadData();
+        }
+        async function rejectJoin(reqId) {
+            if(!confirm("确定要拒绝该申请吗？")) return;
+            await fetch(`/api/pending/${reqId}/reject`, { method: 'POST' });
+            loadData();
+        }
         async function saveUser(id) {
             const name = document.getElementById(`edit-name-${id}`).value.trim();
             const cf = document.getElementById(`edit-cf-${id}`).value.trim();
@@ -424,6 +586,37 @@
             document.getElementById('contestLink').value = '';
             loadData();
         }
+        
+        async function refreshUserRating(id) {
+            const btn = document.getElementById(`btn-refresh-user-${id}`);
+            const originalText = btn.innerText;
+            btn.innerText = "刷新中";
+            btn.disabled = true;
+            try { 
+                await fetch(`/api/users/${id}/refresh`, { method: 'POST' }); 
+            }
+            finally { 
+                btn.innerText = originalText;
+                btn.disabled = false;
+                loadData(); 
+            }
+        }
+        
+        async function refreshRatings() {
+            if(!confirm("将会抓取所有队员的三平台分数，这可能需要一段时间，确定执行吗？")) return;
+            const btn = document.getElementById('btn-refresh-ratings');
+            btn.innerText = "刷新中...";
+            btn.disabled = true;
+            try { 
+                await fetch('/api/ratings/refresh', { method: 'POST' }); 
+            }
+            finally { 
+                btn.innerText = "刷新 Ratings";
+                btn.disabled = false;
+                loadData(); 
+            }
+        }
+
         async function deleteContest(id) {
             if(!confirm("确定要删除竞赛吗？")) return;
             await fetch(`/api/contests/${id}`, { method: 'DELETE' });
@@ -435,18 +628,74 @@
             try { await fetch(`/api/refresh/${id}`, { method: 'POST' }); }
             finally { loadData(); }
         }
-        function renderUsers() {
-            const tbody = document.getElementById('usersBody');
+        function getRatingValue(userId, platform) {
+            const ratings = globalRatings[userId] || {};
+            if (platform === 'total') {
+                return (ratings.codeforces || 0) + (ratings.atcoder || 0) + (ratings.nowcoder || 0);
+            }
+            return ratings[platform] || 0;
+        }
+
+        function renderPending() {
+            const tbody = document.getElementById('pendingBody');
             tbody.innerHTML = '';
-            globalUsers.forEach(u => {
+            if (globalPending.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无待审核的申请</td></tr>';
+                return;
+            }
+            globalPending.forEach(p => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="text-align: left;">${p.time || '-'}</td>
+                        <td>${p.name}</td>
+                        <td>${p.codeforces || '-'}</td>
+                        <td>${p.atcoder || '-'}</td>
+                        <td>${p.nowcoder || '-'}</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-sm" style="background:#00b894;" onclick="approveJoin('${p.id}')">通过</button>
+                                <button class="btn-sm danger" onclick="rejectJoin('${p.id}')">拒绝</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderUsers() {
+            let displayUsers = [...globalUsers];
+
+            if (sortKey) {
+                displayUsers.sort((a, b) => {
+                    let vA = getRatingValue(a.id, sortKey);
+                    let vB = getRatingValue(b.id, sortKey);
+                    if (vA !== vB) {
+                        return sortDesc ? vB - vA : vA - vB;
+                    }
+                    return 0;
+                });
+            }
+
+            const tbody = document.getElementById('userBody');
+            tbody.innerHTML = '';
+            displayUsers.forEach((u, index) => {
+                const originalIndex = globalUsers.findIndex(gu => gu.id === u.id);
+                const ratings = globalRatings[u.id] || {};
+                const nowcoder = ratings.nowcoder || 0;
+                const atcoder = ratings.atcoder || 0;
+                const codeforces = ratings.codeforces || 0;
+                const total = nowcoder + atcoder + codeforces;
+                
                 if (editingUserId === u.id && isAdmin) {
                     tbody.innerHTML += `
                         <tr>
+                            <td class="admin-only"></td>
                             <td style="text-align: left;"><input type="text" class="edit-input" id="edit-name-${u.id}" value="${u.name}"></td>
+                            <td>-</td>
                             <td><input type="text" class="edit-input" id="edit-cf-${u.id}" value="${u.codeforces || ''}"></td>
                             <td><input type="text" class="edit-input" id="edit-ac-${u.id}" value="${u.atcoder || ''}"></td>
                             <td><input type="text" class="edit-input" id="edit-nc-${u.id}" value="${u.nowcoder || ''}"></td>
-                            <td>
+                            <td class="admin-only">
                                 <div class="action-btns">
                                     <button class="btn-sm" style="background:var(--primary);" onclick="saveUser('${u.id}')">保存</button>
                                     <button class="btn-sm danger" onclick="cancelEdit()">取消</button>
@@ -455,22 +704,53 @@
                         </tr>
                     `;
                 } else {
-                    let actionHtml = isAdmin ? `
-                            <td class="admin-only">
-                                <div class="action-btns">
-                                    <button class="btn-sm" onclick="editUser('${u.id}')">编辑</button>
-                                    <button class="btn-sm danger" onclick="deleteUser('${u.id}')">删除</button>
-                                </div>
-                            </td>` : '';
-                    tbody.innerHTML += `
-                        <tr>
-                            <td style="text-align: left;">${u.name}</td>
-                            <td>${u.codeforces || '-'}</td>
-                            <td>${u.atcoder || '-'}</td>
-                            <td>${u.nowcoder || '-'}</td>
-                            ${actionHtml}
-                        </tr>
+                    const isFirst = originalIndex === 0;
+                    const isLast = originalIndex === globalUsers.length - 1;
+                    
+                    let sortingButtons = '';
+                
+                if (isFirst && !isLast) {
+                    sortingButtons = `<button class="btn-sm" style="background: #34495e; padding: 2px 8px; font-size: 14px;" onclick="moveUser('${u.id}', 'down')">↓</button>`;
+                } else if (!isFirst && isLast) {
+                    sortingButtons = `<button class="btn-sm" style="background: #34495e; padding: 2px 8px; font-size: 14px;" onclick="moveUser('${u.id}', 'up')">↑</button>`;
+                } else if (!isFirst && !isLast) {
+                    sortingButtons = `
+                        <button class="btn-sm" style="background: #34495e; padding: 2px 8px; font-size: 14px;" onclick="moveUser('${u.id}', 'up')">↑</button>
+                        <button class="btn-sm" style="background: #34495e; padding: 2px 8px; font-size: 14px;" onclick="moveUser('${u.id}', 'down')">↓</button>
                     `;
+                }
+
+                let sortingHtml = isAdmin && sortKey === null ? `
+                        <td class="admin-only" style="border-bottom: 1px solid var(--border-color); text-align: center;">
+                            <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+                                ${sortingButtons}
+                            </div>
+                        </td>` : (isAdmin ? '<td class="admin-only" style="border-bottom: 1px solid var(--border-color);"></td>' : '');
+                        
+                let actionHtml = isAdmin ? `
+                        <td class="admin-only" style="border-bottom: 1px solid var(--border-color);">
+                            <div class="action-btns">
+                                <button class="btn-sm" onclick="editUser('${u.id}')">编辑</button>
+                                <button class="btn-sm danger" onclick="deleteUser('${u.id}')">删除</button>
+                                <button class="btn-sm refresh" id="btn-refresh-user-${u.id}" onclick="refreshUserRating('${u.id}')">刷新</button>
+                            </div>
+                        </td>` : '';
+                        
+                const cfDisplay = u.codeforces ? `<a href="https://codeforces.com/profile/${u.codeforces}" target="_blank" style="color: var(--text-color);">${u.codeforces}</a>` : '-';
+                const acDisplay = u.atcoder ? `<a href="https://atcoder.jp/users/${u.atcoder}" target="_blank" style="color: var(--text-color);">${u.atcoder}</a>` : '-';
+                const ncDisplay = u.nowcoder ? `<a href="https://ac.nowcoder.com/acm/contest/rating-index?searchUserName=${u.nowcoder}" target="_blank" style="color: var(--text-color);">${u.nowcoder}</a>` : '-';
+
+                tbody.innerHTML += `
+                    <tr>
+                        ${sortingHtml}
+                        <td style="text-align: left;">${u.name}</td>
+                        <td>${total}</td>
+                        <td>${cfDisplay}</td>
+                        <td>${acDisplay}</td>
+                        <td>${ncDisplay}</td>
+                        ${actionHtml}
+                    </tr>
+                `;
                 }
             });
         }
