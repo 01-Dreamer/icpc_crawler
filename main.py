@@ -21,15 +21,6 @@ def get_client_ip():
         return request.headers.get('X-Forwarded-For').split(',')[0].strip()
     return request.remote_addr
 
-@app.before_request
-def log_request_info():
-    logger.info(f"Incoming request: {request.method} {request.url} - IP: {get_client_ip()}")
-
-@app.after_request
-def log_response_info(response):
-    logger.info(f"Response: {response.status} - IP: {get_client_ip()}")
-    return response
-
 USERS_FILE = 'users.json'
 CONTESTS_FILE = 'contests.json'
 RATINGS_FILE = 'ratings.json'
