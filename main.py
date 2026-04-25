@@ -16,6 +16,20 @@ app.secret_key = 'icpc_secret_key_admin'
 
 logger.add("app.log", rotation="10 MB", retention="10 days", level="INFO")
 
+def get_client_ip():
+    if request.headers.get('X-Forwarded-For'):
+        return request.headers.get('X-Forwarded-For').split(',')[0].strip()
+    return request.remote_addr
+
+@app.before_request
+def log_request_info():
+    logger.info(f"Incoming request: {request.method} {request.url} - IP: {get_client_ip()}")
+
+@app.after_request
+def log_response_info(response):
+    logger.info(f"Response: {response.status} - IP: {get_client_ip()}")
+    return response
+
 USERS_FILE = 'users.json'
 CONTESTS_FILE = 'contests.json'
 RATINGS_FILE = 'ratings.json'
@@ -303,7 +317,7 @@ def require_auth(f):
 
 @app.route('/')
 def index():
-    logger.info(f"Main page accessed by IP: {request.remote_addr}")
+    logger.info(f"Main page accessed by IP: {get_client_ip()}")
     return render_template('index.html')
 
 @app.route('/api/login', methods=['POST'])
@@ -547,3 +561,4 @@ def favicon():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+
