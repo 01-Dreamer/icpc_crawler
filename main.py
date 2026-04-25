@@ -9,9 +9,12 @@ from datetime import datetime, timedelta
 from functools import wraps
 from bs4 import BeautifulSoup
 import re
+from loguru import logger
 
 app = Flask(__name__, template_folder='.')
 app.secret_key = 'icpc_secret_key_admin'
+
+logger.add("app.log", rotation="10 MB", retention="10 days", level="INFO")
 
 USERS_FILE = 'users.json'
 CONTESTS_FILE = 'contests.json'
@@ -64,7 +67,7 @@ def get_nowcoder_rating(nickname):
         if alt_rating:
             return int(re.search(r'\d+', alt_rating.text).group())
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error getting nowcoder rating for {nickname}: {e}")
     return None
 
 def get_codeforces_rating(handle):
@@ -75,7 +78,7 @@ def get_codeforces_rating(handle):
         if res["status"] == "OK":
             return res["result"][0].get("rating")
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error getting codeforces rating for {handle}: {e}")
     return None
 
 def get_atcoder_rating(handle):
@@ -88,7 +91,7 @@ def get_atcoder_rating(handle):
             data = res.json()
             return data[-1].get("NewRating") if data else 0
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error getting atcoder rating for {handle}: {e}")
     return None
 
 def update_all_ratings():
@@ -152,10 +155,10 @@ def check_codeforces(contest_id, handle):
                 return True
             return False
         else:
-            print(f"error: {data.get('comment')}")
+            logger.error(f"error checking codeforces for {handle} in {contest_id}: {data.get('comment')}")
             return False
     except Exception as e:
-        print(f"error: {e}")
+        logger.error(f"error checking codeforces for {handle}: {e}")
         return False
 
 def check_atcoder(contest_id, user_id, from_second=0):
@@ -177,11 +180,11 @@ def check_atcoder(contest_id, user_id, from_second=0):
                 return True
             return False
         else:
-            print(f"error, status: {response.status_code}")
+            logger.error(f"error checking atcoder for {user_id}, status: {response.status_code}")
             return False
             
     except Exception as e:
-        print(f"error: {e}")
+        logger.error(f"error checking atcoder for {user_id}: {e}")
         return False
 
 def check_nowcoder(contest_id, user_id):
@@ -195,8 +198,8 @@ def check_nowcoder(contest_id, user_id):
             res_json = response.json()
             if res_json.get("code") == 0 and res_json.get("data", {}).get("data", []):
                 return True
-    except:
-        pass
+    except Exception as e:
+        logger.error(f"error checking nowcoder for {user_id}: {e}")
     return False
 
 def _do_refresh_contest(contest_id):
@@ -273,7 +276,7 @@ def run_daily_refresh():
     try:
         update_all_ratings()
     except Exception as e:
-        print(f"Error updating ratings: {e}")
+        logger.error(f"Error updating ratings: {e}")
 
 def background_job():
     while True:
@@ -286,7 +289,7 @@ def background_job():
         try:
             run_daily_refresh()
         except Exception as e:
-            print(f"Scheduled task error: {e}")
+            logger.error(f"Scheduled task error: {e}")
 
 threading.Thread(target=background_job, daemon=True).start()
 
@@ -300,6 +303,7 @@ def require_auth(f):
 
 @app.route('/')
 def index():
+    logger.info(f"Main page accessed by IP: {request.remote_addr}")
     return render_template('index.html')
 
 @app.route('/api/login', methods=['POST'])
