@@ -10,6 +10,7 @@ from functools import wraps
 from bs4 import BeautifulSoup
 import re
 from loguru import logger
+import html
 
 app = Flask(__name__, template_folder='.')
 app.secret_key = 'icpc_secret_key_admin'
@@ -46,6 +47,122 @@ load_json(USERS_FILE)
 load_json(CONTESTS_FILE)
 load_json(RATINGS_FILE, {})
 load_json(PENDING_FILE, [])
+
+UPCOMING_FILE = 'upcoming.json'
+load_json(UPCOMING_FILE, [])
+
+def get_upcoming_codeforces_contests():
+    url = "https://codeforces.com/api/contest.list"
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        if data.get("status") != "OK":
+            return []
+        upcoming = []
+        for contest in data.get("result", []):
+            if contest.get("phase") == "BEFORE":
+                dt = datetime.fromtimestamp(contest.get("startTimeSeconds"))
+                cid = str(contest.get("id"))
+                upcoming.append({
+                    "platform": "Codeforces",
+                    "contest_id": cid,
+                    "name": contest.get("name"),
+                    "time": dt.strftime('%Y-%m-%d %H:%M'),
+                    "link": f"https://codeforces.com/contests/{cid}",
+                    "id": str(uuid.uuid4())
+                })
+        return upcoming
+    except Exception as e:
+        logger.error(f"Error fetching Codeforces: {e}")
+        return []
+
+def get_upcoming_atcoder_contests():
+    url = "https://atcoder.jp/contests/"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        table = soup.find('div', id='contest-table-upcoming')
+        if not table:
+            return []
+        upcoming = []
+        for row in table.find('tbody').find_all('tr'):
+            cols = row.find_all('td')
+            if len(cols) < 2: continue
+            link_tag = cols[1].find('a')
+            relative_url = link_tag['href']
+            raw_time_str = cols[0].text.strip()[:19]
+            jst_time = datetime.strptime(raw_time_str, '%Y-%m-%d %H:%M:%S')
+            beijing_time = jst_time - timedelta(hours=1)
+            upcoming.append({
+                "platform": "AtCoder",
+                "contest_id": relative_url.split('/')[-1],
+                "name": link_tag.text.strip(),
+                "time": beijing_time.strftime('%Y-%m-%d %H:%M'),
+                "link": f"https://atcoder.jp{relative_url}",
+                "id": str(uuid.uuid4())
+            })
+        return upcoming
+    except Exception as e:
+        logger.error(f"Error fetching AtCoder: {e}")
+        return []
+
+def get_upcoming_nowcoder_contests():
+    url = "https://ac.nowcoder.com/acm/contest/vip-index"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+        "Referer": "https://www.google.com/"
+    }
+    try:
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        
+        items = soup.select('div.platform-item.js-item')
+        upcoming = []
+        
+        for item in items:
+            if 'finish' in item.get('class', []):
+                continue
+                
+            raw_json = item.get('data-json')
+            if not raw_json:
+                continue
+            
+            clean_json = html.unescape(raw_json)
+            
+            try:
+                contest_data = json.loads(clean_json)
+            except json.JSONDecodeError as e:
+                continue
+            
+            contest_id = str(contest_data.get('contestId'))
+            name = contest_data.get('contestName')
+            start_ts = contest_data.get('contestStartTime') / 1000
+            dt = datetime.fromtimestamp(start_ts)
+            
+            upcoming.append({
+                "platform": "NowCoder",
+                "contest_id": contest_id,
+                "name": name,
+                "time": dt.strftime('%Y-%m-%d %H:%M'),
+                "link": f"https://ac.nowcoder.com/acm/contest/{contest_id}",
+                "id": str(uuid.uuid4())
+            })
+        return upcoming
+    except Exception as e:
+        logger.error(f"Error fetching NowCoder: {e}")
+        return []
+
+def refresh_upcoming_contests():
+    all_contests = []
+    all_contests.extend(get_upcoming_codeforces_contests())
+    all_contests.extend(get_upcoming_atcoder_contests())
+    all_contests.extend(get_upcoming_nowcoder_contests())
+    all_contests.sort(key=lambda x: x.get("time", ""))
+    save_json(UPCOMING_FILE, all_contests)
 
 def get_nowcoder_rating(nickname):
     url = "https://ac.nowcoder.com/acm/contest/rating-index"
@@ -295,6 +412,11 @@ def background_job():
             run_daily_refresh()
         except Exception as e:
             logger.error(f"Scheduled task error: {e}")
+            
+        try:
+            refresh_upcoming_contests()
+        except Exception as e:
+            logger.error(f"Scheduled task error refreshing upcoming contests: {e}")
 
 threading.Thread(target=background_job, daemon=True).start()
 
@@ -509,6 +631,16 @@ def add_contest():
     if isinstance(contests, dict):
         contests = []
     data = request.json
+    
+    platform = data.get('platform')
+    contest_id = data.get('contest_id')
+    if not platform or not contest_id:
+        return jsonify({'error': '平台或比赛ID不得为空'}), 400
+        
+    for c in contests:
+        if c.get('platform', '').lower() == platform.lower() and str(c.get('contest_id', '')) == str(contest_id):
+            return jsonify({'error': '该比赛已存在'}), 400
+
     data['id'] = str(uuid.uuid4())
     data['results'] = {}
     contests.append(data)
@@ -541,6 +673,22 @@ def refresh_contest(contest_id):
 def refresh_ratings_api():
     try:
         update_all_ratings()
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/upcoming', methods=['GET'])
+def get_upcoming():
+    upcoming = load_json(UPCOMING_FILE, [])
+    if isinstance(upcoming, dict):
+        upcoming = []
+    return jsonify({'upcoming': upcoming})
+
+@app.route('/api/upcoming/refresh', methods=['POST'])
+@require_auth
+def refresh_upcoming_api():
+    try:
+        refresh_upcoming_contests()
         return jsonify({'status': 'ok'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500

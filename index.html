@@ -284,7 +284,7 @@
                 <button onclick="addUser()">添加队员</button>
             </div>
             <div class="table-responsive">
-                <table>
+                <table id="userTable">
                     <thead>
                         <tr>
                             <th class="admin-only" style="display: none; width: 60px;">排序</th>
@@ -325,6 +325,13 @@
             </div>
         </div>
         <div class="panel">
+            <h2>近期比赛
+                <button class="btn-sm refresh admin-only" id="btn-refresh-upcoming" style="display: none; float: right; margin-top: -5px;" onclick="refreshUpcoming()">🔄 刷新比赛</button>
+            </h2>
+            <div class="table-responsive" id="upcomingTableContainer">
+            </div>
+        </div>
+        <div class="panel">
             <h2>比赛情况</h2>
             <div class="form-group admin-only" id="addContestGroup" style="display: none;">
                 <select id="contestPlatform">
@@ -346,6 +353,7 @@
     <script>
         let globalUsers = [];
         let globalContests = [];
+        let globalUpcoming = [];
         let globalRatings = {};
         let globalPending = [];
         let editingUserId = null;
@@ -471,6 +479,7 @@
             }
             renderUsers();
             renderStats();
+            renderUpcoming();
             if (isAdmin) renderPending();
         }
         async function loadData() {
@@ -480,6 +489,11 @@
             globalContests = data.contests || [];
             globalRatings = data.ratings || {};
             globalPending = data.pending || [];
+            
+            const upRes = await fetch('/api/upcoming');
+            const upData = await upRes.json();
+            globalUpcoming = upData.upcoming || [];
+
             globalContests.sort((a, b) => {
                 const t1 = a.time ? new Date(a.time).getTime() : 0;
                 const t2 = b.time ? new Date(b.time).getTime() : 0;
@@ -487,6 +501,7 @@
             });
             renderUsers();
             renderStats();
+            renderUpcoming();
             if (isAdmin) renderPending();
         }
         async function addUser() {
@@ -628,6 +643,22 @@
             try { await fetch(`/api/refresh/${id}`, { method: 'POST' }); }
             finally { loadData(); }
         }
+        
+        async function refreshUpcoming() {
+            const btn = document.getElementById('btn-refresh-upcoming');
+            const originalText = btn.innerText;
+            btn.innerText = "刷新中...";
+            btn.disabled = true;
+            try { 
+                await fetch('/api/upcoming/refresh', { method: 'POST' }); 
+            }
+            finally { 
+                btn.innerText = originalText;
+                btn.disabled = false;
+                loadData(); 
+            }
+        }
+        
         function getRatingValue(userId, platform) {
             const ratings = globalRatings[userId] || {};
             if (platform === 'total') {
@@ -831,6 +862,73 @@
             html += '</tbody></table>';
             container.innerHTML = html;
         }
+        function renderUpcoming() {
+            const container = document.getElementById('upcomingTableContainer');
+            if (globalUpcoming.length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无近期比赛数据，等待管理员刷新</div>';
+                return;
+            }
+            
+            let html = '<table><thead><tr><th>平台</th><th>比赛名称</th><th>时间</th><th>链接</th>';
+            if (isAdmin) {
+                html += '<th>操作</th>';
+            }
+            html += '</tr></thead><tbody>';
+            
+            globalUpcoming.forEach(c => {
+                let actionHtml = '';
+                if (isAdmin) {
+                    const isAdded = globalContests.some(existC => 
+                        existC.platform.toLowerCase() === c.platform.toLowerCase() && 
+                        String(existC.contest_id) === String(c.contest_id)
+                    );
+                    if (isAdded) {
+                        actionHtml = `<td><span style="color: #64748b; font-size: 13px;">已添加</span></td>`;
+                    } else {
+                        // Pass contest data back to string
+                        const cJson = JSON.stringify(c).replace(/"/g, '&quot;');
+                        actionHtml = `<td><button class="btn-sm" style="background:#6c5ce7;" onclick="addUpcomingContest('${cJson}')">添加</button></td>`;
+                    }
+                }
+                
+                html += `<tr>
+                    <td>${c.platform}</td>
+                    <td style="text-align: left;">${c.name}</td>
+                    <td>${c.time}</td>
+                    <td><a href="${c.link}" target="_blank">🔗 前往</a></td>
+                    ${actionHtml}
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function addUpcomingContest(cJsonStr) {
+            try {
+                const c = JSON.parse(cJsonStr);
+                const res = await fetch('/api/contests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        platform: c.platform, 
+                        contest_id: c.contest_id, 
+                        name: c.name, 
+                        time: c.time, 
+                        link: c.link 
+                    })
+                });
+                
+                const returnData = await res.json();
+                if (!res.ok) {
+                    alert(returnData.error || '添加失败');
+                } else {
+                    loadData();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
         checkAuth().then(loadData);
     </script>
 </body>

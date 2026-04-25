@@ -96,3 +96,9 @@
 2026-04-25 22:59:31.400 | INFO     | __main__:index:311 - Main page accessed by IP: 220.197.245.28
 2026-04-25 23:03:02.599 | INFO     | __main__:index:311 - Main page accessed by IP: 220.197.245.28
 2026-04-25 23:03:03.909 | INFO     | __main__:index:311 - Main page accessed by IP: 220.197.245.28
+2026-04-25 23:40:08.967 | INFO     | __main__:index:408 - Main page accessed by IP: 127.0.0.1
+2026-04-25 23:40:23.408 | INFO     | __main__:index:408 - Main page accessed by IP: 127.0.0.1
+2026-04-25 23:50:05.118 | INFO     | __main__:index:428 - Main page accessed by IP: 127.0.0.1
+2026-04-25 23:56:29.394 | INFO     | __main__:index:428 - Main page accessed by IP: 127.0.0.1
+2026-04-25 23:56:59.516 | INFO     | __main__:index:428 - Main page accessed by IP: 127.0.0.1
+2026-04-26 00:01:26.143 | INFO     | __main__:index:433 - Main page accessed by IP: 127.0.0.1
