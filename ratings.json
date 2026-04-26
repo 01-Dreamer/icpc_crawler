@@ -6,7 +6,7 @@
     },
     "81d6601b-34d2-4bae-83ca-eee25e9ff175": {
         "codeforces": 2008,
-        "atcoder": 1536,
+        "atcoder": 1528,
         "nowcoder": 2178
     },
     "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": {
@@ -16,7 +16,7 @@
     },
     "0ace2f3d-1296-4ab0-aaf0-da088e685326": {
         "codeforces": 1453,
-        "atcoder": 992,
+        "atcoder": 1014,
         "nowcoder": 1747
     },
     "83face24-93b5-47ba-bc8a-532a50258b2d": {
@@ -41,37 +41,37 @@
     },
     "b22b1d5b-f55a-45cb-8bdb-65180f218801": {
         "codeforces": 1248,
-        "atcoder": 491,
+        "atcoder": 537,
         "nowcoder": 1223
     },
     "fa4689cb-a947-4b9d-aea9-c94254a72b50": {
-        "codeforces": 1358,
-        "atcoder": 703,
+        "codeforces": 1398,
+        "atcoder": 740,
         "nowcoder": 1259
     },
     "54b863e5-888a-43c8-ad1a-81473ca23178": {
         "codeforces": 686,
-        "atcoder": 259,
+        "atcoder": 289,
         "nowcoder": 877
     },
     "45f49cc0-f13a-4f99-acab-d69e6e79c2d8": {
-        "codeforces": 1116,
+        "codeforces": 1107,
         "atcoder": 392,
         "nowcoder": 766
     },
     "6dcbea96-698e-46d3-8982-97cd4a6840c8": {
         "codeforces": 1352,
-        "atcoder": 579,
+        "atcoder": 637,
         "nowcoder": 1264
     },
     "3624ea8b-d78d-4ffb-a70e-e8040309115b": {
-        "codeforces": 1090,
-        "atcoder": 465,
+        "codeforces": 1129,
+        "atcoder": 463,
         "nowcoder": 1111
     },
     "9e6f852e-64a1-4b6f-b8fd-26397d76b5fd": {
         "codeforces": 1131,
-        "atcoder": 186,
+        "atcoder": 132,
         "nowcoder": 1145
     },
     "3ec1ac40-ffde-498f-9054-f7cf40f97d6b": {
@@ -81,17 +81,22 @@
     },
     "6df0b38e-395b-47e5-abdf-52ddfef6fd8c": {
         "codeforces": 919,
-        "atcoder": 243,
+        "atcoder": 274,
         "nowcoder": 658
     },
     "a1ee2e01-023f-4f9a-b2ef-4076d87e7727": {
         "codeforces": 418,
-        "atcoder": 207,
+        "atcoder": 240,
         "nowcoder": 893
     },
     "d404674f-f1dd-453c-92e1-85cc13e2d8dc": {
         "codeforces": 1243,
         "atcoder": 830,
         "nowcoder": 1193
+    },
+    "d61bbac4-4502-4e61-9577-6f7ad4a60958": {
+        "codeforces": 1946,
+        "atcoder": 1617,
+        "nowcoder": 2004
     }
 }
