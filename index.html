@@ -153,6 +153,12 @@
         button.danger:hover { box-shadow: 0 5px 15px rgba(255, 118, 117, 0.4); }
         button.refresh { background: #00b894; }
         button.refresh:hover { box-shadow: 0 5px 15px rgba(0, 184, 148, 0.4); }
+        #statsTableContainer {
+            transform: rotateX(180deg);
+        }
+        #statsTableContainer > * {
+            transform: rotateX(180deg);
+        }
         .table-responsive {
             overflow-x: auto;
             border-radius: 8px;
@@ -885,7 +891,6 @@
                     if (isAdded) {
                         actionHtml = `<td><span style="color: #64748b; font-size: 13px;">已添加</span></td>`;
                     } else {
-                        // Pass contest data back to string
                         const cJson = JSON.stringify(c).replace(/"/g, '&quot;');
                         actionHtml = `<td><button class="btn-sm" style="background:#6c5ce7;" onclick="addUpcomingContest('${cJson}')">添加</button></td>`;
                     }
@@ -933,3 +938,4 @@
     </script>
 </body>
 </html>
+
