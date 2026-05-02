@@ -5,7 +5,7 @@
         "nowcoder": 2083
     },
     "81d6601b-34d2-4bae-83ca-eee25e9ff175": {
-        "codeforces": 2008,
+        "codeforces": 1992,
         "atcoder": 1528,
         "nowcoder": 2178
     },
@@ -15,7 +15,7 @@
         "nowcoder": 0
     },
     "0ace2f3d-1296-4ab0-aaf0-da088e685326": {
-        "codeforces": 1453,
+        "codeforces": 1436,
         "atcoder": 1014,
         "nowcoder": 1747
     },
@@ -26,7 +26,7 @@
     },
     "f55f4c28-3d0c-4336-8d7f-f1cfdd3c4c1f": {
         "codeforces": 1679,
-        "nowcoder": 909,
+        "nowcoder": 820,
         "atcoder": 207
     },
     "68a5e922-ad70-4984-afe5-5839531d06e9": {
@@ -40,24 +40,24 @@
         "nowcoder": 1299
     },
     "b22b1d5b-f55a-45cb-8bdb-65180f218801": {
-        "codeforces": 1248,
+        "codeforces": 1241,
         "atcoder": 537,
         "nowcoder": 1223
     },
     "fa4689cb-a947-4b9d-aea9-c94254a72b50": {
-        "codeforces": 1398,
+        "codeforces": 1450,
         "atcoder": 740,
         "nowcoder": 1259
     },
     "54b863e5-888a-43c8-ad1a-81473ca23178": {
-        "codeforces": 686,
+        "codeforces": 890,
         "atcoder": 289,
         "nowcoder": 877
     },
     "45f49cc0-f13a-4f99-acab-d69e6e79c2d8": {
-        "codeforces": 1107,
+        "codeforces": 1024,
         "atcoder": 392,
-        "nowcoder": 766
+        "nowcoder": 706
     },
     "6dcbea96-698e-46d3-8982-97cd4a6840c8": {
         "codeforces": 1352,
@@ -65,14 +65,14 @@
         "nowcoder": 1264
     },
     "3624ea8b-d78d-4ffb-a70e-e8040309115b": {
-        "codeforces": 1129,
+        "codeforces": 1091,
         "atcoder": 463,
         "nowcoder": 1111
     },
     "9e6f852e-64a1-4b6f-b8fd-26397d76b5fd": {
-        "codeforces": 1131,
+        "codeforces": 1229,
         "atcoder": 132,
-        "nowcoder": 1145
+        "nowcoder": 1185
     },
     "3ec1ac40-ffde-498f-9054-f7cf40f97d6b": {
         "codeforces": 403,
@@ -80,23 +80,28 @@
         "nowcoder": 0
     },
     "6df0b38e-395b-47e5-abdf-52ddfef6fd8c": {
-        "codeforces": 919,
+        "codeforces": 960,
         "atcoder": 274,
-        "nowcoder": 658
+        "nowcoder": 631
     },
     "a1ee2e01-023f-4f9a-b2ef-4076d87e7727": {
-        "codeforces": 418,
+        "codeforces": 652,
         "atcoder": 240,
         "nowcoder": 893
     },
     "d404674f-f1dd-453c-92e1-85cc13e2d8dc": {
-        "codeforces": 1243,
+        "codeforces": 1201,
         "atcoder": 830,
-        "nowcoder": 1193
+        "nowcoder": 1161
     },
     "d61bbac4-4502-4e61-9577-6f7ad4a60958": {
         "codeforces": 1946,
         "atcoder": 1617,
         "nowcoder": 2004
+    },
+    "70150533-b50f-435d-9c31-aebabef176d4": {
+        "codeforces": 672,
+        "atcoder": 0,
+        "nowcoder": 989
     }
 }

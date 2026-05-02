@@ -35,13 +35,6 @@
         "id": "0ace2f3d-1296-4ab0-aaf0-da088e685326"
     },
     {
-        "name": "张鑫宇",
-        "codeforces": "01_Dreamer",
-        "atcoder": "01Dreamer",
-        "nowcoder": "01_Dreamer",
-        "id": "83face24-93b5-47ba-bc8a-532a50258b2d"
-    },
-    {
         "name": "邹弘辉",
         "codeforces": "Eric_Z",
         "atcoder": "Eric_10Z4",
@@ -138,5 +131,19 @@
         "atcoder": "a2251489884",
         "nowcoder": "iyiy",
         "id": "d404674f-f1dd-453c-92e1-85cc13e2d8dc"
+    },
+    {
+        "name": "朱鹭",
+        "codeforces": "Noctashrum",
+        "atcoder": "Noctashrum",
+        "nowcoder": "Noctashrum",
+        "id": "70150533-b50f-435d-9c31-aebabef176d4"
+    },
+    {
+        "name": "张鑫宇",
+        "codeforces": "01_Dreamer",
+        "atcoder": "01Dreamer",
+        "nowcoder": "01_Dreamer",
+        "id": "83face24-93b5-47ba-bc8a-532a50258b2d"
     }
 ]
