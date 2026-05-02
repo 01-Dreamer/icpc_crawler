@@ -171,49 +171,65 @@ def get_nowcoder_rating(nickname):
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Referer': 'https://ac.nowcoder.com/acm/contest/rating-index'
     }
-    try:
-        response = requests.get(url, params=params, headers=headers, timeout=10)
-        if response.status_code != 200:
+    delays = [2, 5, 10]
+    for i in range(4):
+        try:
+            response = requests.get(url, params=params, headers=headers, timeout=10)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, "html.parser")
+            rows = soup.find_all("tr")
+            for row in rows:
+                if nickname.lower() in row.text.lower():
+                    cols = row.find_all("td")
+                    if len(cols) >= 3:
+                        rating_text = cols[-1].get_text(strip=True)
+                        match = re.search(r'\d+', rating_text)
+                        if match:
+                            return int(match.group())
+            alt_rating = soup.find("span", class_=re.compile("user-rating-rank|rating-score"))
+            if alt_rating:
+                return int(re.search(r'\d+', alt_rating.text).group())
             return None
-        soup = BeautifulSoup(response.text, "html.parser")
-        rows = soup.find_all("tr")
-        for row in rows:
-            if nickname.lower() in row.text.lower():
-                cols = row.find_all("td")
-                if len(cols) >= 3:
-                    rating_text = cols[-1].get_text(strip=True)
-                    match = re.search(r'\d+', rating_text)
-                    if match:
-                        return int(match.group())
-        alt_rating = soup.find("span", class_=re.compile("user-rating-rank|rating-score"))
-        if alt_rating:
-            return int(re.search(r'\d+', alt_rating.text).group())
-    except Exception as e:
-        logger.error(f"Error getting nowcoder rating for {nickname}: {e}")
+        except Exception as e:
+            logger.error(f"Error getting nowcoder rating for {nickname} (attempt {i+1}): {e}")
+            if i < 3:
+                time.sleep(delays[i])
     return None
 
 def get_codeforces_rating(handle):
     if not handle: return None
     url = f"https://codeforces.com/api/user.info?handles={handle}"
-    try:
-        res = requests.get(url, timeout=10).json()
-        if res["status"] == "OK":
-            return res["result"][0].get("rating")
-    except Exception as e:
-        logger.error(f"Error getting codeforces rating for {handle}: {e}")
+    delays = [2, 5, 10]
+    for i in range(4):
+        try:
+            res = requests.get(url, timeout=10).json()
+            if res.get("status") == "OK":
+                return res["result"][0].get("rating")
+            return None
+        except Exception as e:
+            logger.error(f"Error getting codeforces rating for {handle} (attempt {i+1}): {e}")
+            if i < 3:
+                time.sleep(delays[i])
     return None
 
 def get_atcoder_rating(handle):
     if not handle: return None
     url = f"https://atcoder.jp/users/{handle}/history/json"
     headers = {'User-Agent': 'Mozilla/5.0'}
-    try:
-        res = requests.get(url, headers=headers, timeout=10)
-        if res.status_code == 200:
-            data = res.json()
-            return data[-1].get("NewRating") if data else 0
-    except Exception as e:
-        logger.error(f"Error getting atcoder rating for {handle}: {e}")
+    delays = [2, 5, 10]
+    for i in range(4):
+        try:
+            res = requests.get(url, headers=headers, timeout=10)
+            if res.status_code == 200:
+                data = res.json()
+                return data[-1].get("NewRating") if data else 0
+            elif res.status_code == 404:
+                return None
+            res.raise_for_status()
+        except Exception as e:
+            logger.error(f"Error getting atcoder rating for {handle} (attempt {i+1}): {e}")
+            if i < 3:
+                time.sleep(delays[i])
     return None
 
 def update_all_ratings():
@@ -227,31 +243,28 @@ def update_all_ratings():
     for user in users:
         user_id = user.get('id')
         if user_id not in ratings:
-            ratings[user_id] = {}
+            ratings[user_id] = {'codeforces': 0, 'atcoder': 0, 'nowcoder': 0}
         
         time.sleep(1)
         cf_handle = user.get('codeforces')
         if cf_handle:
             cf_val = get_codeforces_rating(cf_handle)
-            ratings[user_id]['codeforces'] = cf_val if cf_val is not None else 0
-        else:
-            ratings[user_id]['codeforces'] = 0
+            if cf_val is not None:
+                ratings[user_id]['codeforces'] = cf_val
                 
         time.sleep(1)
         ac_handle = user.get('atcoder')
         if ac_handle:
             ac_val = get_atcoder_rating(ac_handle)
-            ratings[user_id]['atcoder'] = ac_val if ac_val is not None else 0
-        else:
-            ratings[user_id]['atcoder'] = 0
+            if ac_val is not None:
+                ratings[user_id]['atcoder'] = ac_val
                 
         time.sleep(1)
         nc_handle = user.get('nowcoder')
         if nc_handle:
             nc_val = get_nowcoder_rating(nc_handle)
-            ratings[user_id]['nowcoder'] = nc_val if nc_val is not None else 0
-        else:
-            ratings[user_id]['nowcoder'] = 0
+            if nc_val is not None:
+                ratings[user_id]['nowcoder'] = nc_val
             
         time.sleep(10)
                 
@@ -700,4 +713,5 @@ def favicon():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+
 
