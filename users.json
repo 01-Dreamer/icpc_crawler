@@ -1,19 +1,5 @@
 [
     {
-        "name": "高凌豪",
-        "codeforces": "Lihg",
-        "atcoder": "Lihg",
-        "nowcoder": "Lihg",
-        "id": "d61bbac4-4502-4e61-9577-6f7ad4a60958"
-    },
-    {
-        "name": "毕洲铭",
-        "codeforces": "False0099",
-        "atcoder": "False0099",
-        "nowcoder": "被加薪的小山竹很无语",
-        "id": "58a7c2e1-31a0-457c-94f8-2020d5ebb584"
-    },
-    {
         "name": "李健阳",
         "codeforces": "oviNE",
         "atcoder": "Ovine",
@@ -33,6 +19,20 @@
         "atcoder": "hosecn",
         "nowcoder": "hose",
         "id": "0ace2f3d-1296-4ab0-aaf0-da088e685326"
+    },
+    {
+        "name": "毕洲铭",
+        "codeforces": "False0099",
+        "atcoder": "False0099",
+        "nowcoder": "被加薪的小山竹很无语",
+        "id": "58a7c2e1-31a0-457c-94f8-2020d5ebb584"
+    },
+    {
+        "name": "高凌豪",
+        "codeforces": "Lihg",
+        "atcoder": "Lihg",
+        "nowcoder": "Lihg",
+        "id": "d61bbac4-4502-4e61-9577-6f7ad4a60958"
     },
     {
         "name": "邹弘辉",
