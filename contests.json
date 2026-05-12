@@ -972,7 +972,7 @@
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": true,
             "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
-            "d61bbac4-4502-4e61-9577-6f7ad4a60958": false,
+            "d61bbac4-4502-4e61-9577-6f7ad4a60958": true,
             "f55f4c28-3d0c-4336-8d7f-f1cfdd3c4c1f": false,
             "68a5e922-ad70-4984-afe5-5839531d06e9": false,
             "84cb3c7e-abe5-422d-a24c-a9d870f75774": true,
@@ -2204,7 +2204,7 @@
         "link": "https://atcoder.jp/contests/abc457",
         "id": "3f24cad7-d312-4bc6-9249-e96af099e7b6",
         "results": {
-            "81d6601b-34d2-4bae-83ca-eee25e9ff175": false,
+            "81d6601b-34d2-4bae-83ca-eee25e9ff175": true,
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
             "58a7c2e1-31a0-457c-94f8-2020d5ebb584": true,
