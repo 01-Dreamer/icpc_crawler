@@ -168,7 +168,7 @@
             "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
             "d61bbac4-4502-4e61-9577-6f7ad4a60958": false,
             "f55f4c28-3d0c-4336-8d7f-f1cfdd3c4c1f": false,
-            "68a5e922-ad70-4984-afe5-5839531d06e9": false,
+            "68a5e922-ad70-4984-afe5-5839531d06e9": true,
             "84cb3c7e-abe5-422d-a24c-a9d870f75774": false,
             "b22b1d5b-f55a-45cb-8bdb-65180f218801": false,
             "fa4689cb-a947-4b9d-aea9-c94254a72b50": true,
@@ -1778,7 +1778,7 @@
             "0d6e71fb-6a41-493d-8970-9ed0558ebdc3": false,
             "0ace2f3d-1296-4ab0-aaf0-da088e685326": false,
             "58a7c2e1-31a0-457c-94f8-2020d5ebb584": false,
-            "d61bbac4-4502-4e61-9577-6f7ad4a60958": false,
+            "d61bbac4-4502-4e61-9577-6f7ad4a60958": true,
             "f55f4c28-3d0c-4336-8d7f-f1cfdd3c4c1f": false,
             "68a5e922-ad70-4984-afe5-5839531d06e9": false,
             "84cb3c7e-abe5-422d-a24c-a9d870f75774": false,
@@ -2226,5 +2226,50 @@
             "70150533-b50f-435d-9c31-aebabef176d4": false,
             "83face24-93b5-47ba-bc8a-532a50258b2d": false
         }
+    },
+    {
+        "platform": "NowCoder",
+        "contest_id": "134957",
+        "name": "牛客周赛 Round 144",
+        "time": "2026-05-17 19:00",
+        "link": "https://ac.nowcoder.com/acm/contest/134957",
+        "id": "af5c0c44-1766-40d1-98dd-157d7ff868a2",
+        "results": {}
+    },
+    {
+        "platform": "AtCoder",
+        "contest_id": "abc458",
+        "name": "AtCoder Beginner Contest 458",
+        "time": "2026-05-16 20:00",
+        "link": "https://atcoder.jp/contests/abc458",
+        "id": "458be4bc-40d4-4a41-9508-01d8bb9f8b21",
+        "results": {}
+    },
+    {
+        "platform": "Codeforces",
+        "contest_id": "2230",
+        "name": "Educational Codeforces Round 190 (Rated for Div. 2)",
+        "time": "2026-05-18 22:35",
+        "link": "https://codeforces.com/contests/2230",
+        "id": "5ff6c0d0-b2d6-4da4-bb34-baed8fe4ae37",
+        "results": {}
+    },
+    {
+        "platform": "NowCoder",
+        "contest_id": "134981",
+        "name": "牛客周赛 Round 145",
+        "time": "2026-05-24 19:00",
+        "link": "https://ac.nowcoder.com/acm/contest/134981",
+        "id": "5dde2f06-0895-4012-a5bc-5b36d9418812",
+        "results": {}
+    },
+    {
+        "platform": "AtCoder",
+        "contest_id": "abc460",
+        "name": "AtCoder Beginner Contest 460",
+        "time": "2026-05-30 20:00",
+        "link": "https://atcoder.jp/contests/abc460",
+        "id": "6450ca5b-d9f4-4027-89bb-ef96050c6cfd",
+        "results": {}
     }
 ]

@@ -5,7 +5,7 @@
         "name": "牛客挑战赛88",
         "time": "2026-05-15 19:00",
         "link": "https://ac.nowcoder.com/acm/contest/134814",
-        "id": "ae624b6d-2ab6-443e-9fe9-9edc300dd0d4"
+        "id": "12ba8b0e-cfd3-4473-8b90-c3847b34aa23"
     },
     {
         "platform": "AtCoder",
@@ -13,7 +13,7 @@
         "name": "AtCoder Heuristic Contest 065",
         "time": "2026-05-16 14:00",
         "link": "https://atcoder.jp/contests/ahc065",
-        "id": "9b6abc40-cbfb-4c70-bacb-3fb9fa283ded"
+        "id": "a3a8342b-7680-4371-9c7a-a6048e09aa9b"
     },
     {
         "platform": "AtCoder",
@@ -21,15 +21,15 @@
         "name": "AtCoder Beginner Contest 458",
         "time": "2026-05-16 20:00",
         "link": "https://atcoder.jp/contests/abc458",
-        "id": "da52a7aa-b808-46d7-b5a3-ed6b16542010"
+        "id": "f7e53f3b-cd3c-4629-a8e7-b6b5c5719251"
     },
     {
         "platform": "Codeforces",
         "contest_id": "2228",
-        "name": "Codeforces Round (Div. 2)",
+        "name": "Codeforces Round 1098 (Div. 2)",
         "time": "2026-05-16 22:35",
         "link": "https://codeforces.com/contests/2228",
-        "id": "446564fb-f619-41b3-9f11-18de9ab507ec"
+        "id": "5fafc984-ac38-45c4-ad58-d84e97506449"
     },
     {
         "platform": "NowCoder",
@@ -37,7 +37,7 @@
         "name": "牛客周赛 Round 144",
         "time": "2026-05-17 19:00",
         "link": "https://ac.nowcoder.com/acm/contest/134957",
-        "id": "d9ca2088-624d-4691-a9c1-70a24e6555e7"
+        "id": "cd984f2f-42ca-4d18-824b-e85ff97186b8"
     },
     {
         "platform": "AtCoder",
@@ -45,7 +45,7 @@
         "name": "AtCoder Regular Contest++ 220",
         "time": "2026-05-17 20:00",
         "link": "https://atcoder.jp/contests/arc220",
-        "id": "6478504d-c543-4c9e-ab29-b9aded339a14"
+        "id": "c7d8df2a-f272-40f3-8779-1145552e8bae"
     },
     {
         "platform": "Codeforces",
@@ -53,7 +53,15 @@
         "name": "Educational Codeforces Round 190 (Rated for Div. 2)",
         "time": "2026-05-18 22:35",
         "link": "https://codeforces.com/contests/2230",
-        "id": "ccede8a1-f4af-4570-8239-6c12cf799447"
+        "id": "153427cb-1f08-43e0-ba0e-7f73b3c44f72"
+    },
+    {
+        "platform": "Codeforces",
+        "contest_id": "2231",
+        "name": "Codeforces Round (Div. 2)",
+        "time": "2026-05-21 22:35",
+        "link": "https://codeforces.com/contests/2231",
+        "id": "65da6747-5c89-4b89-bda3-6b5592545336"
     },
     {
         "platform": "NowCoder",
@@ -61,7 +69,7 @@
         "name": "牛客练习赛153",
         "time": "2026-05-22 19:00",
         "link": "https://ac.nowcoder.com/acm/contest/134820",
-        "id": "5ec3c797-eacd-4cbd-9610-e052531aa4df"
+        "id": "389af44a-c2ff-4161-aa4e-623bcff33706"
     },
     {
         "platform": "AtCoder",
@@ -69,7 +77,7 @@
         "name": "Tokio Marine & Nichido Fire Insurance Programming Contest 2026  (AtCoder Beginner Contest 459)",
         "time": "2026-05-23 20:00",
         "link": "https://atcoder.jp/contests/abc459",
-        "id": "a49bc5cc-acc9-4a43-8fb4-a36363559e7e"
+        "id": "eb492f0d-4835-430e-926e-b8bc90e21d13"
     },
     {
         "platform": "Codeforces",
@@ -77,7 +85,7 @@
         "name": "Spectral::Cup 2026 Round 2 (Codeforces Round, Div. 1 + Div. 2)",
         "time": "2026-05-23 22:35",
         "link": "https://codeforces.com/contests/2229",
-        "id": "adf0d0b3-d40e-4526-9ff9-74bcb55d3a11"
+        "id": "4dc0313c-fc26-414d-940e-b4e0b9254c0d"
     },
     {
         "platform": "NowCoder",
@@ -85,7 +93,7 @@
         "name": "牛客周赛 Round 145",
         "time": "2026-05-24 19:00",
         "link": "https://ac.nowcoder.com/acm/contest/134981",
-        "id": "4864a8b7-774b-4ea8-8f93-8e8ddb49fab5"
+        "id": "9da6a867-2931-4c8f-ba28-ac8ccebcf4c1"
     },
     {
         "platform": "AtCoder",
@@ -93,7 +101,7 @@
         "name": "AtCoder Heuristic Contest 066",
         "time": "2026-05-29 18:00",
         "link": "https://atcoder.jp/contests/ahc066",
-        "id": "d3b4f30b-0bdb-46ad-9edb-7dbeabeaf294"
+        "id": "5e236b85-b0ff-4d9e-ab46-db996b6d149f"
     },
     {
         "platform": "AtCoder",
@@ -101,7 +109,7 @@
         "name": "AtCoder Beginner Contest 460",
         "time": "2026-05-30 20:00",
         "link": "https://atcoder.jp/contests/abc460",
-        "id": "13ffceaf-51f4-49ef-9c46-19f32c61759d"
+        "id": "df6948c8-7af7-47cf-9d14-badfe6e6a409"
     },
     {
         "platform": "AtCoder",
@@ -109,7 +117,15 @@
         "name": "AtCoder Regular Contest++ 221",
         "time": "2026-05-31 20:00",
         "link": "https://atcoder.jp/contests/arc221",
-        "id": "01847d0a-8be8-43f5-9440-1ca00682aba9"
+        "id": "7c75c010-0279-4e9c-ac7d-9f629f0cc7d0"
+    },
+    {
+        "platform": "NowCoder",
+        "contest_id": "135295",
+        "name": "牛客2026年儿童节比赛",
+        "time": "2026-06-01 19:00",
+        "link": "https://ac.nowcoder.com/acm/contest/135295",
+        "id": "39249624-2964-474f-ade0-cf26a9d6253e"
     },
     {
         "platform": "AtCoder",
@@ -117,7 +133,7 @@
         "name": "AtCoder Beginner Contest 461",
         "time": "2026-06-06 20:00",
         "link": "https://atcoder.jp/contests/abc461",
-        "id": "e85abff1-8030-4518-a7e1-2f1083fdbf88"
+        "id": "0837bf12-5938-44bf-ac0f-f2463d3e5f07"
     },
     {
         "platform": "AtCoder",
@@ -125,7 +141,7 @@
         "name": "CodeQUEEN 2026 -qual- (AtCoder Beginner Contest 462)",
         "time": "2026-06-13 20:00",
         "link": "https://atcoder.jp/contests/abc462",
-        "id": "0a764f65-646c-4cd7-bc42-9c55182bb35a"
+        "id": "95227e33-bfc3-4f37-bdb0-4f873584bf61"
     },
     {
         "platform": "AtCoder",
@@ -133,7 +149,7 @@
         "name": "AtCoder Regular Contest 222",
         "time": "2026-06-14 20:00",
         "link": "https://atcoder.jp/contests/arc222",
-        "id": "76f4f1bf-b97a-4b9e-ae00-dd9dfc72b529"
+        "id": "f29acd5c-9ff9-406a-b935-4517252638d0"
     },
     {
         "platform": "AtCoder",
@@ -141,7 +157,7 @@
         "name": "第七回日本最強プログラマー学生選手権～Advance～ -予選- （AtCoder Beginner Contest 464）",
         "time": "2026-06-27 20:00",
         "link": "https://atcoder.jp/contests/abc464",
-        "id": "960408c3-a770-49e7-ad33-934f734dbefa"
+        "id": "d859b1fa-6b2f-4b0c-be6e-ad8ef427566e"
     },
     {
         "platform": "NowCoder",
@@ -149,6 +165,6 @@
         "name": "2026牛客暑期多校训练营1",
         "time": "2026-07-16 12:00",
         "link": "https://ac.nowcoder.com/acm/contest/133876",
-        "id": "fde0ea98-0562-4240-b983-6e8da4d9beda"
+        "id": "8777593f-65fa-4d23-babb-a0ea6e4c6f7b"
     }
 ]
