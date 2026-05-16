@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YNU-ICPC 训练监测平台</title>
-	<link rel="icon" href="logo.ico" type="image/png">
+	<link rel="icon" href="/logo.ico" type="image/png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
     <style>
@@ -148,6 +148,12 @@
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.65;
+            transform: none;
+            box-shadow: none;
         }
         button.danger { background: #ff7675; }
         button.danger:hover { box-shadow: 0 5px 15px rgba(255, 118, 117, 0.4); }
@@ -338,7 +344,9 @@
             </div>
         </div>
         <div class="panel">
-            <h2>比赛情况</h2>
+            <h2>比赛情况
+                <button class="btn-sm refresh admin-only" id="btn-refresh-all-contests" style="display: none; float: right; margin-top: -5px;" onclick="refreshAllContests()">🔄 刷新出勤</button>
+            </h2>
             <div class="form-group admin-only" id="addContestGroup" style="display: none;">
                 <select id="contestPlatform">
                     <option value="Codeforces">Codeforces</option>
@@ -364,6 +372,8 @@
         let globalPending = [];
         let editingUserId = null;
         let isAdmin = false;
+        let isRefreshingAllContests = false;
+        let contestRefreshPollTimer = null;
 
         let sortKey = null;
         let sortDesc = true;
@@ -487,6 +497,13 @@
             renderStats();
             renderUpcoming();
             if (isAdmin) renderPending();
+            if (isAdmin) {
+                startContestRefreshPolling();
+                checkContestRefreshStatus();
+            } else {
+                stopContestRefreshPolling();
+                setContestRefreshState(false);
+            }
         }
         async function loadData() {
             const res = await fetch('/api/data');
@@ -509,6 +526,7 @@
             renderStats();
             renderUpcoming();
             if (isAdmin) renderPending();
+            if (isAdmin) checkContestRefreshStatus();
         }
         async function addUser() {
             const name = document.getElementById('userName').value.trim();
@@ -644,10 +662,103 @@
             loadData();
         }
         async function refreshContest(id) {
+            if (isRefreshingAllContests) return;
+
             const btn = document.getElementById(`btn-refresh-${id}`);
             btn.innerText = "刷新中...";
             try { await fetch(`/api/refresh/${id}`, { method: 'POST' }); }
             finally { loadData(); }
+        }
+
+        function setContestRefreshState(refreshing) {
+            isRefreshingAllContests = refreshing;
+            const btn = document.getElementById('btn-refresh-all-contests');
+            if (btn) {
+                btn.innerText = refreshing ? "刷新中..." : "🔄 全量刷新";
+                btn.disabled = refreshing;
+            }
+
+            document.querySelectorAll('.contest-refresh-btn').forEach(item => {
+                item.disabled = refreshing;
+            });
+        }
+
+        function stopContestRefreshPolling() {
+            if (!contestRefreshPollTimer) return;
+            clearInterval(contestRefreshPollTimer);
+            contestRefreshPollTimer = null;
+        }
+
+        function startContestRefreshPolling() {
+            if (contestRefreshPollTimer || !isAdmin) return;
+            contestRefreshPollTimer = setInterval(checkContestRefreshStatus, 5000);
+        }
+
+        async function checkContestRefreshStatus() {
+            if (!isAdmin) return;
+
+            try {
+                const res = await fetch('/api/contests/refresh/status');
+                if (!res.ok) return;
+
+                const data = await res.json();
+                const wasRefreshing = isRefreshingAllContests;
+                setContestRefreshState(Boolean(data.refreshing));
+
+                if (data.refreshing) {
+                    startContestRefreshPolling();
+                } else {
+                    if (wasRefreshing) loadData();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function refreshAllContests() {
+            if (isRefreshingAllContests) {
+                setContestRefreshState(true);
+                startContestRefreshPolling();
+                return;
+            }
+
+            try {
+                const statusRes = await fetch('/api/contests/refresh/status');
+                if (statusRes.ok) {
+                    const statusData = await statusRes.json();
+                    if (statusData.refreshing) {
+                        setContestRefreshState(true);
+                        startContestRefreshPolling();
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+
+            if (!confirm("将会刷新所有已添加比赛的参赛情况，耗时较长。确定执行吗？")) return;
+
+            setContestRefreshState(true);
+            let keepRefreshing = false;
+            try {
+                const res = await fetch('/api/contests/refresh', { method: 'POST' });
+                const data = await res.json().catch(() => ({}));
+
+                if (res.status === 409 || data.refreshing) {
+                    keepRefreshing = true;
+                    startContestRefreshPolling();
+                    return;
+                }
+
+                if (!res.ok) {
+                    alert(data.error || '刷新失败');
+                }
+            } finally {
+                if (!keepRefreshing) {
+                    setContestRefreshState(false);
+                    loadData();
+                }
+            }
         }
         
         async function refreshUpcoming() {
@@ -851,7 +962,7 @@
                                 ${linkHtml}
                                 ${isAdmin ? `
                                 <div class="action-btns" style="justify-content: flex-start; margin-top: 8px;">
-                                    <button class="btn-sm refresh" id="btn-refresh-${c.id}" onclick="refreshContest('${c.id}')">🔄 刷新</button>
+                                    <button class="btn-sm refresh contest-refresh-btn" id="btn-refresh-${c.id}" onclick="refreshContest('${c.id}')" ${isRefreshingAllContests ? 'disabled' : ''}>🔄 刷新</button>
                                     <button class="btn-sm danger" onclick="deleteContest('${c.id}')">🗑️ 删除</button>
                                 </div>
                                 ` : ''}
@@ -860,8 +971,9 @@
                     </td>
                 `;
                 globalUsers.forEach(u => {
-                    const participated = c.results && c.results[u.id];
-                    html += `<td><span class="${participated ? 'status-yes' : 'status-no'}">${participated ? 'AC' : 'WA'}</span></td>`;
+                    const rawCount = c.results && c.results[u.id];
+                    const acCount = Number(rawCount || 0);
+                    html += `<td><span class="${acCount > 0 ? 'status-yes' : 'status-no'}">${acCount}</span></td>`;
                 });
                 html += '</tr>';
             });
@@ -938,4 +1050,3 @@
     </script>
 </body>
 </html>
-
