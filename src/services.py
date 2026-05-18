@@ -37,6 +37,26 @@ class ContestRefreshAlreadyRunning(Exception):
 _CONTEST_REFRESH_LOCK = threading.Lock()
 
 
+def _parse_contest_time(time_str):
+    if not time_str:
+        return None
+
+    normalized = str(time_str).strip().replace("T", " ")
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"):
+        try:
+            return datetime.strptime(normalized, fmt)
+        except ValueError:
+            pass
+    return None
+
+
+def _contest_has_started(contest, now=None):
+    contest_time = _parse_contest_time(contest.get("time"))
+    if contest_time is None:
+        return True
+    return contest_time <= (now or datetime.now())
+
+
 def initialize_data_files():
     initialize_database()
 
@@ -119,23 +139,26 @@ def refresh_user_rating(user_id):
 
 
 def refresh_contest_participation(contest_id):
-    users = list_users()
     target_contest = get_contest(contest_id)
     if not target_contest:
         return None
 
+    contest_time = _parse_contest_time(target_contest.get("time"))
+    if contest_time is not None and contest_time > datetime.now():
+        logger.info(
+            f"Skipping contest refresh before start: "
+            f"{target_contest.get('platform')} {target_contest.get('contest_id')}"
+        )
+        return target_contest
+
     platform = target_contest.get("platform", "").lower()
     cid = target_contest.get("contest_id", "")
+    users = list_users()
 
     from_second = 0
-    time_str = target_contest.get("time")
-    if time_str:
-        try:
-            c_time = datetime.strptime(time_str, "%Y-%m-%d %H:%M")
-            from_time = c_time - timedelta(days=1)
-            from_second = int(from_time.timestamp())
-        except ValueError:
-            pass
+    if contest_time is not None:
+        from_time = contest_time - timedelta(days=1)
+        from_second = int(from_time.timestamp())
 
     results = {}
     for user in users:
@@ -175,7 +198,11 @@ def refresh_all_contest_participation():
         raise ContestRefreshAlreadyRunning()
 
     try:
-        contests = list_contests()
+        now = datetime.now()
+        contests = [
+            contest for contest in list_contests()
+            if _contest_has_started(contest, now)
+        ]
         contests.sort(key=lambda contest: contest.get("time", ""), reverse=True)
         refreshed = _refresh_contests(contests)
         return {"total": len(contests), "refreshed": refreshed}
@@ -189,14 +216,9 @@ def run_daily_refresh():
 
     past_contests = []
     for contest in contests:
-        time_str = contest.get("time")
-        if time_str:
-            try:
-                contest_time = datetime.strptime(time_str, "%Y-%m-%d %H:%M")
-                if contest_time <= now:
-                    past_contests.append((contest_time, contest))
-            except ValueError:
-                pass
+        contest_time = _parse_contest_time(contest.get("time"))
+        if contest_time is not None and contest_time <= now:
+            past_contests.append((contest_time, contest))
 
     past_contests.sort(key=lambda x: x[0], reverse=True)
 

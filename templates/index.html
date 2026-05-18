@@ -232,6 +232,16 @@
         a:hover { text-decoration: underline; }
         .action-btns { display: flex; gap: 8px; justify-content: center;}
         .btn-sm { padding: 5px 10px; font-size: 12px;}
+        .load-more-status {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 12px;
+            color: #94a3b8;
+            font-size: 13px;
+            flex-wrap: wrap;
+        }
         @media screen and (max-width: 768px) {
             body { padding: 10px; font-size: 13px; }
             h1 { font-size: 1.5rem; flex-direction: column; align-items: stretch; gap: 15px; margin-bottom: 20px;}
@@ -361,12 +371,14 @@
             </div>
             <div class="table-responsive" id="statsTableContainer">
             </div>
+            <div class="load-more-status" id="contestLoadMore"></div>
         </div>
     </div>
 
     <script>
         let globalUsers = [];
         let globalContests = [];
+        let globalContestKeys = [];
         let globalUpcoming = [];
         let globalRatings = {};
         let globalPending = [];
@@ -374,6 +386,9 @@
         let isAdmin = false;
         let isRefreshingAllContests = false;
         let contestRefreshPollTimer = null;
+        const contestPageSize = 20;
+        let contestCursorState = { page_size: contestPageSize, next_cursor: '', has_next: false };
+        let isLoadingMoreContests = false;
 
         let sortKey = null;
         let sortDesc = true;
@@ -505,11 +520,23 @@
                 setContestRefreshState(false);
             }
         }
-        async function loadData() {
-            const res = await fetch('/api/data');
+        async function loadData(options = {}) {
+            const contestCursor = options.cursor || '';
+            const appendContests = Boolean(options.appendContests);
+            const params = new URLSearchParams({
+                contest_page_size: contestPageSize
+            });
+            if (contestCursor) params.set('contest_cursor', contestCursor);
+            const res = await fetch(`/api/data?${params.toString()}`);
             const data = await res.json();
             globalUsers = data.users || [];
-            globalContests = data.contests || [];
+            globalContests = appendContests ? globalContests.concat(data.contests || []) : (data.contests || []);
+            globalContestKeys = data.contest_keys || [];
+            contestCursorState = data.contest_cursor || {
+                page_size: contestPageSize,
+                next_cursor: '',
+                has_next: false
+            };
             globalRatings = data.ratings || {};
             globalPending = data.pending || [];
             
@@ -517,13 +544,9 @@
             const upData = await upRes.json();
             globalUpcoming = upData.upcoming || [];
 
-            globalContests.sort((a, b) => {
-                const t1 = a.time ? new Date(a.time).getTime() : 0;
-                const t2 = b.time ? new Date(b.time).getTime() : 0;
-                return t2 - t1;
-            });
             renderUsers();
             renderStats();
+            renderContestLoader();
             renderUpcoming();
             if (isAdmin) renderPending();
             if (isAdmin) checkContestRefreshStatus();
@@ -623,7 +646,7 @@
             document.getElementById('contestName').value = '';
             document.getElementById('contestTime').value = '';
             document.getElementById('contestLink').value = '';
-            loadData();
+            loadFirstContestPage();
         }
         
         async function refreshUserRating(id) {
@@ -659,7 +682,7 @@
         async function deleteContest(id) {
             if(!confirm("确定要删除竞赛吗？")) return;
             await fetch(`/api/contests/${id}`, { method: 'DELETE' });
-            loadData();
+            reloadCurrentContestPage();
         }
         async function refreshContest(id) {
             if (isRefreshingAllContests) return;
@@ -667,7 +690,7 @@
             const btn = document.getElementById(`btn-refresh-${id}`);
             btn.innerText = "刷新中...";
             try { await fetch(`/api/refresh/${id}`, { method: 'POST' }); }
-            finally { loadData(); }
+            finally { reloadCurrentContestPage(); }
         }
 
         function setContestRefreshState(refreshing) {
@@ -708,7 +731,7 @@
                 if (data.refreshing) {
                     startContestRefreshPolling();
                 } else {
-                    if (wasRefreshing) loadData();
+                    if (wasRefreshing) reloadCurrentContestPage();
                 }
             } catch (e) {
                 console.error(e);
@@ -756,7 +779,7 @@
             } finally {
                 if (!keepRefreshing) {
                     setContestRefreshState(false);
-                    loadData();
+                    reloadCurrentContestPage();
                 }
             }
         }
@@ -980,6 +1003,70 @@
             html += '</tbody></table>';
             container.innerHTML = html;
         }
+
+        function renderContestLoader() {
+            const container = document.getElementById('contestLoadMore');
+            if (!container) return;
+
+            const hasNext = Boolean(contestCursorState.has_next);
+
+            if (isLoadingMoreContests) {
+                container.innerHTML = '<span>加载中...</span>';
+                return;
+            }
+
+            if (!hasNext) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = '<span>向下滚动加载更多比赛</span>';
+            setTimeout(handleContestInfiniteScroll, 0);
+        }
+
+        function loadFirstContestPage() {
+            isLoadingMoreContests = false;
+            loadData();
+        }
+
+        function reloadCurrentContestPage() {
+            loadFirstContestPage();
+        }
+
+        async function loadMoreContests() {
+            if (isLoadingMoreContests || !contestCursorState.has_next || !contestCursorState.next_cursor) {
+                return;
+            }
+
+            isLoadingMoreContests = true;
+            renderContestLoader();
+            try {
+                await loadData({
+                    cursor: contestCursorState.next_cursor,
+                    appendContests: true
+                });
+            } finally {
+                isLoadingMoreContests = false;
+                renderContestLoader();
+            }
+        }
+
+        function handleContestInfiniteScroll() {
+            if (isLoadingMoreContests || !contestCursorState.has_next) {
+                return;
+            }
+
+            const loader = document.getElementById('contestLoadMore');
+            if (!loader) {
+                return;
+            }
+
+            const rect = loader.getBoundingClientRect();
+            if (rect.top <= window.innerHeight + 160) {
+                loadMoreContests();
+            }
+        }
+
         function renderUpcoming() {
             const container = document.getElementById('upcomingTableContainer');
             if (globalUpcoming.length === 0) {
@@ -996,7 +1083,8 @@
             globalUpcoming.forEach(c => {
                 let actionHtml = '';
                 if (isAdmin) {
-                    const isAdded = globalContests.some(existC => 
+                    const contestKeys = globalContestKeys.length ? globalContestKeys : globalContests;
+                    const isAdded = contestKeys.some(existC =>
                         existC.platform.toLowerCase() === c.platform.toLowerCase() && 
                         String(existC.contest_id) === String(c.contest_id)
                     );
@@ -1039,13 +1127,15 @@
                 if (!res.ok) {
                     alert(returnData.error || '添加失败');
                 } else {
-                    loadData();
+                    loadFirstContestPage();
                 }
             } catch (e) {
                 console.error(e);
             }
         }
 
+        window.addEventListener('scroll', handleContestInfiniteScroll, { passive: true });
+        window.addEventListener('resize', handleContestInfiniteScroll);
         checkAuth().then(loadData);
     </script>
 </body>

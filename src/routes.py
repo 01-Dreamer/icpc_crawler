@@ -19,7 +19,8 @@ from .database import (
     delete_pending,
     delete_user as db_delete_user,
     get_pending,
-    list_contests,
+    list_contest_keys,
+    list_contests_page,
     list_pending,
     list_ratings,
     list_upcoming,
@@ -89,9 +90,24 @@ def get_data():
     if session.get("logged_in"):
         pending = list_pending()
 
+    try:
+        contest_page_size = int(request.args.get("contest_page_size", 20))
+    except (TypeError, ValueError):
+        contest_page_size = 20
+
+    contest_page_size = min(max(contest_page_size, 1), 100)
+    contest_cursor = request.args.get("contest_cursor", "")
+    contest_page_data = list_contests_page(contest_page_size, contest_cursor)
+
     return jsonify({
         "users": list_users(),
-        "contests": list_contests(),
+        "contests": contest_page_data["items"],
+        "contest_keys": list_contest_keys(),
+        "contest_cursor": {
+            "page_size": contest_page_size,
+            "next_cursor": contest_page_data["next_cursor"],
+            "has_next": contest_page_data["has_next"],
+        },
         "ratings": list_ratings(),
         "pending": pending,
     })

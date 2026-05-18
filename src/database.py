@@ -1,6 +1,9 @@
+import base64
+import binascii
 import json
 import sqlite3
 import threading
+from datetime import datetime, timezone
 
 from .config import DATABASE_FILE
 
@@ -384,6 +387,73 @@ def _replace_pending(conn, pending):
         )
 
 
+def list_contest_keys():
+    with _DB_LOCK, _connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT platform, contest_id
+            FROM contests
+            ORDER BY sort_order, rowid
+            """
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def _contest_time_value(time_str):
+    if not time_str:
+        return None
+
+    normalized = str(time_str).strip().replace("T", " ")
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"):
+        try:
+            dt = datetime.strptime(normalized, fmt)
+            return int(dt.replace(tzinfo=timezone.utc).timestamp())
+        except ValueError:
+            pass
+    return None
+
+
+def _contest_sort_key(row):
+    time_value = _contest_time_value(row["time"])
+    time_bucket = 0 if time_value is not None else 1
+    sort_time = -time_value if time_value is not None else 0
+    return (
+        time_bucket,
+        sort_time,
+        int(row["sort_order"]),
+        int(row["db_rowid"]),
+    )
+
+
+def _encode_contest_cursor(row):
+    time_bucket, sort_time, sort_order, rowid = _contest_sort_key(row)
+    payload = {
+        "time_bucket": time_bucket,
+        "sort_time": sort_time,
+        "sort_order": sort_order,
+        "rowid": rowid,
+    }
+    raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+    return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+
+
+def _decode_contest_cursor(cursor):
+    if not cursor:
+        return None
+    try:
+        padding = "=" * (-len(cursor) % 4)
+        raw = base64.urlsafe_b64decode((cursor + padding).encode("ascii"))
+        payload = json.loads(raw.decode("utf-8"))
+        return (
+            int(payload["time_bucket"]),
+            int(payload["sort_time"]),
+            int(payload["sort_order"]),
+            int(payload["rowid"]),
+        )
+    except (binascii.Error, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return None
+
+
 def list_contests():
     with _DB_LOCK, _connect() as conn:
         rows = conn.execute(
@@ -393,9 +463,20 @@ def list_contests():
             ORDER BY sort_order, rowid
             """
         ).fetchall()
-        result_rows = conn.execute(
-            "SELECT contest_id, user_id, ac_count FROM contest_results"
-        ).fetchall()
+
+        contest_ids = [row["id"] for row in rows]
+        if contest_ids:
+            placeholders = ",".join("?" for _ in contest_ids)
+            result_rows = conn.execute(
+                f"""
+                SELECT contest_id, user_id, ac_count
+                FROM contest_results
+                WHERE contest_id IN ({placeholders})
+                """,
+                contest_ids,
+            ).fetchall()
+        else:
+            result_rows = []
 
     results_by_contest = {}
     for result in result_rows:
@@ -417,6 +498,70 @@ def list_contests():
         contest.update(_load_extra(row))
         contests.append(contest)
     return contests
+
+
+def list_contests_page(page_size=20, cursor=None):
+    page_size = min(max(int(page_size or 20), 1), 100)
+    cursor_data = _decode_contest_cursor(cursor)
+
+    with _DB_LOCK, _connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT rowid AS db_rowid, id, platform, contest_id, name, time, link,
+                   sort_order, extra
+            FROM contests
+            """,
+        ).fetchall()
+
+        sorted_rows = sorted(rows, key=_contest_sort_key)
+        if cursor_data:
+            sorted_rows = [
+                row for row in sorted_rows
+                if _contest_sort_key(row) > cursor_data
+            ]
+
+        page_rows = sorted_rows[:page_size]
+        contest_ids = [row["id"] for row in page_rows]
+        if contest_ids:
+            placeholders = ",".join("?" for _ in contest_ids)
+            result_rows = conn.execute(
+                f"""
+                SELECT contest_id, user_id, ac_count
+                FROM contest_results
+                WHERE contest_id IN ({placeholders})
+                """,
+                contest_ids,
+            ).fetchall()
+        else:
+            result_rows = []
+
+    results_by_contest = {}
+    for result in result_rows:
+        results_by_contest.setdefault(result["contest_id"], {})[result["user_id"]] = result[
+            "ac_count"
+        ]
+
+    contests = []
+    for row in page_rows:
+        contest = {
+            "id": row["id"],
+            "platform": row["platform"],
+            "contest_id": row["contest_id"],
+            "name": row["name"],
+            "time": row["time"],
+            "link": row["link"],
+            "results": results_by_contest.get(row["id"], {}),
+        }
+        contest.update(_load_extra(row))
+        contests.append(contest)
+
+    has_next = len(sorted_rows) > page_size
+    next_cursor = _encode_contest_cursor(page_rows[-1]) if has_next and page_rows else ""
+    return {
+        "items": contests,
+        "next_cursor": next_cursor,
+        "has_next": has_next,
+    }
 
 
 def get_contest(contest_uuid):
