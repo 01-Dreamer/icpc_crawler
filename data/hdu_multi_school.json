@@ -1,5 +1,5 @@
 {
-  "title": "牛客寒假多校",
+  "title": "杭电多校",
   "contest_count": 10,
   "result_columns": [
     {
@@ -11,21 +11,283 @@
       "label": "补题"
     }
   ],
+  "teams": [
+    {
+      "name": "教练说不拿金牌就延毕",
+      "school": "云南大学",
+      "members": [
+        "李健阳",
+        "吴一航",
+        "王毅豪"
+      ],
+      "results": {
+        "1": {
+          "live": "",
+          "upsolve": ""
+        },
+        "2": {
+          "live": "",
+          "upsolve": ""
+        },
+        "3": {
+          "live": "",
+          "upsolve": ""
+        },
+        "4": {
+          "live": "",
+          "upsolve": ""
+        },
+        "5": {
+          "live": "",
+          "upsolve": ""
+        },
+        "6": {
+          "live": "",
+          "upsolve": ""
+        },
+        "7": {
+          "live": "",
+          "upsolve": ""
+        },
+        "8": {
+          "live": "",
+          "upsolve": ""
+        },
+        "9": {
+          "live": "",
+          "upsolve": ""
+        },
+        "10": {
+          "live": "",
+          "upsolve": ""
+        }
+      },
+      "username": "team0723"
+    },
+    {
+      "name": "/u200e",
+      "school": "云南大学",
+      "members": [
+        "邹弘辉",
+        "房元首",
+        "卢永轩"
+      ],
+      "results": {
+        "1": {
+          "live": "",
+          "upsolve": ""
+        },
+        "2": {
+          "live": "",
+          "upsolve": ""
+        },
+        "3": {
+          "live": "",
+          "upsolve": ""
+        },
+        "4": {
+          "live": "",
+          "upsolve": ""
+        },
+        "5": {
+          "live": "",
+          "upsolve": ""
+        },
+        "6": {
+          "live": "",
+          "upsolve": ""
+        },
+        "7": {
+          "live": "",
+          "upsolve": ""
+        },
+        "8": {
+          "live": "",
+          "upsolve": ""
+        },
+        "9": {
+          "live": "",
+          "upsolve": ""
+        },
+        "10": {
+          "live": "",
+          "upsolve": ""
+        }
+      },
+      "username": "team0724"
+    },
+    {
+      "name": "我的刀队",
+      "school": "云南大学",
+      "members": [
+        "吴吁柬",
+        "樊奕洋",
+        "苏弈宁"
+      ],
+      "results": {
+        "1": {
+          "live": "",
+          "upsolve": ""
+        },
+        "2": {
+          "live": "",
+          "upsolve": ""
+        },
+        "3": {
+          "live": "",
+          "upsolve": ""
+        },
+        "4": {
+          "live": "",
+          "upsolve": ""
+        },
+        "5": {
+          "live": "",
+          "upsolve": ""
+        },
+        "6": {
+          "live": "",
+          "upsolve": ""
+        },
+        "7": {
+          "live": "",
+          "upsolve": ""
+        },
+        "8": {
+          "live": "",
+          "upsolve": ""
+        },
+        "9": {
+          "live": "",
+          "upsolve": ""
+        },
+        "10": {
+          "live": "",
+          "upsolve": ""
+        }
+      },
+      "username": "team0725"
+    },
+    {
+      "name": "啊对对队",
+      "school": "云南大学",
+      "members": [
+        "蔡浩然",
+        "朱鹭",
+        "韩一铭"
+      ],
+      "results": {
+        "1": {
+          "live": "",
+          "upsolve": ""
+        },
+        "2": {
+          "live": "",
+          "upsolve": ""
+        },
+        "3": {
+          "live": "",
+          "upsolve": ""
+        },
+        "4": {
+          "live": "",
+          "upsolve": ""
+        },
+        "5": {
+          "live": "",
+          "upsolve": ""
+        },
+        "6": {
+          "live": "",
+          "upsolve": ""
+        },
+        "7": {
+          "live": "",
+          "upsolve": ""
+        },
+        "8": {
+          "live": "",
+          "upsolve": ""
+        },
+        "9": {
+          "live": "",
+          "upsolve": ""
+        },
+        "10": {
+          "live": "",
+          "upsolve": ""
+        }
+      },
+      "username": "team0726"
+    },
+    {
+      "name": "我现在的要求是男娃来男娃去",
+      "school": "云南大学",
+      "members": [
+        "王宜禾",
+        "熊厚廣",
+        "王开谚"
+      ],
+      "results": {
+        "1": {
+          "live": "",
+          "upsolve": ""
+        },
+        "2": {
+          "live": "",
+          "upsolve": ""
+        },
+        "3": {
+          "live": "",
+          "upsolve": ""
+        },
+        "4": {
+          "live": "",
+          "upsolve": ""
+        },
+        "5": {
+          "live": "",
+          "upsolve": ""
+        },
+        "6": {
+          "live": "",
+          "upsolve": ""
+        },
+        "7": {
+          "live": "",
+          "upsolve": ""
+        },
+        "8": {
+          "live": "",
+          "upsolve": ""
+        },
+        "9": {
+          "live": "",
+          "upsolve": ""
+        },
+        "10": {
+          "live": "",
+          "upsolve": ""
+        }
+      },
+      "username": "team0727"
+    }
+  ],
   "contests": [
     {
       "key": "1",
       "label": "1",
-      "contest_id": "133876"
+      "contest_id": "1229"
     },
     {
       "key": "2",
       "label": "2",
-      "contest_id": "133877"
+      "contest_id": ""
     },
     {
       "key": "3",
       "label": "3",
-      "contest_id": "133878"
+      "contest_id": ""
     },
     {
       "key": "4",
@@ -61,308 +323,6 @@
       "key": "10",
       "label": "10",
       "contest_id": ""
-    }
-  ],
-  "teams": [
-    {
-      "name": "教练说不拿金牌就延毕",
-      "members": [
-        "李健阳",
-        "吴一航",
-        "王毅豪"
-      ],
-      "results": {
-        "1": {
-          "live": 2,
-          "upsolve": 0
-        },
-        "2": {
-          "live": "",
-          "upsolve": ""
-        },
-        "3": {
-          "live": "",
-          "upsolve": ""
-        },
-        "4": {
-          "live": "",
-          "upsolve": ""
-        },
-        "5": {
-          "live": "",
-          "upsolve": ""
-        },
-        "6": {
-          "live": "",
-          "upsolve": ""
-        },
-        "7": {
-          "live": "",
-          "upsolve": ""
-        },
-        "8": {
-          "live": "",
-          "upsolve": ""
-        },
-        "9": {
-          "live": "",
-          "upsolve": ""
-        },
-        "10": {
-          "live": "",
-          "upsolve": ""
-        }
-      }
-    },
-    {
-      "name": "海绵宝宝抓派大星抓章鱼哥抓水母",
-      "members": [
-        "张祖翊",
-        "姜凡",
-        "何毅"
-      ],
-      "results": {
-        "1": {
-          "live": 5,
-          "upsolve": 1
-        },
-        "2": {
-          "live": "",
-          "upsolve": ""
-        },
-        "3": {
-          "live": "",
-          "upsolve": ""
-        },
-        "4": {
-          "live": "",
-          "upsolve": ""
-        },
-        "5": {
-          "live": "",
-          "upsolve": ""
-        },
-        "6": {
-          "live": "",
-          "upsolve": ""
-        },
-        "7": {
-          "live": "",
-          "upsolve": ""
-        },
-        "8": {
-          "live": "",
-          "upsolve": ""
-        },
-        "9": {
-          "live": "",
-          "upsolve": ""
-        },
-        "10": {
-          "live": "",
-          "upsolve": ""
-        }
-      }
-    },
-    {
-      "name": "如果你是大二，我还是推荐你打ACM",
-      "members": [
-        "王宜禾",
-        "熊厚廣",
-        "王开谚"
-      ],
-      "results": {
-        "1": {
-          "live": 3,
-          "upsolve": 2
-        },
-        "2": {
-          "live": "",
-          "upsolve": ""
-        },
-        "3": {
-          "live": "",
-          "upsolve": ""
-        },
-        "4": {
-          "live": "",
-          "upsolve": ""
-        },
-        "5": {
-          "live": "",
-          "upsolve": ""
-        },
-        "6": {
-          "live": "",
-          "upsolve": ""
-        },
-        "7": {
-          "live": "",
-          "upsolve": ""
-        },
-        "8": {
-          "live": "",
-          "upsolve": ""
-        },
-        "9": {
-          "live": "",
-          "upsolve": ""
-        },
-        "10": {
-          "live": "",
-          "upsolve": ""
-        }
-      }
-    },
-    {
-      "name": "我的刀队",
-      "members": [
-        "吴吁柬",
-        "樊奕洋",
-        "苏弈宁"
-      ],
-      "results": {
-        "1": {
-          "live": 3,
-          "upsolve": 0
-        },
-        "2": {
-          "live": "",
-          "upsolve": ""
-        },
-        "3": {
-          "live": "",
-          "upsolve": ""
-        },
-        "4": {
-          "live": "",
-          "upsolve": ""
-        },
-        "5": {
-          "live": "",
-          "upsolve": ""
-        },
-        "6": {
-          "live": "",
-          "upsolve": ""
-        },
-        "7": {
-          "live": "",
-          "upsolve": ""
-        },
-        "8": {
-          "live": "",
-          "upsolve": ""
-        },
-        "9": {
-          "live": "",
-          "upsolve": ""
-        },
-        "10": {
-          "live": "",
-          "upsolve": ""
-        }
-      }
-    },
-    {
-      "name": "\\u200e",
-      "members": [
-        "邹弘辉",
-        "房元首",
-        "卢永轩"
-      ],
-      "results": {
-        "1": {
-          "live": 2,
-          "upsolve": 3
-        },
-        "2": {
-          "live": "",
-          "upsolve": ""
-        },
-        "3": {
-          "live": "",
-          "upsolve": ""
-        },
-        "4": {
-          "live": "",
-          "upsolve": ""
-        },
-        "5": {
-          "live": "",
-          "upsolve": ""
-        },
-        "6": {
-          "live": "",
-          "upsolve": ""
-        },
-        "7": {
-          "live": "",
-          "upsolve": ""
-        },
-        "8": {
-          "live": "",
-          "upsolve": ""
-        },
-        "9": {
-          "live": "",
-          "upsolve": ""
-        },
-        "10": {
-          "live": "",
-          "upsolve": ""
-        }
-      }
-    },
-    {
-      "name": "纵acm出题十万必嚼碎吞之",
-      "members": [
-        "蔡浩然",
-        "朱鹭",
-        "韩一铭"
-      ],
-      "results": {
-        "1": {
-          "live": 2,
-          "upsolve": 3
-        },
-        "2": {
-          "live": "",
-          "upsolve": ""
-        },
-        "3": {
-          "live": "",
-          "upsolve": ""
-        },
-        "4": {
-          "live": "",
-          "upsolve": ""
-        },
-        "5": {
-          "live": "",
-          "upsolve": ""
-        },
-        "6": {
-          "live": "",
-          "upsolve": ""
-        },
-        "7": {
-          "live": "",
-          "upsolve": ""
-        },
-        "8": {
-          "live": "",
-          "upsolve": ""
-        },
-        "9": {
-          "live": "",
-          "upsolve": ""
-        },
-        "10": {
-          "live": "",
-          "upsolve": ""
-        }
-      }
     }
   ]
 }

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 from loguru import logger
 
-from .config import NOWCODER_WINTER_SCHOOL_FILE
+from .config import HDU_MULTI_SCHOOL_FILE, NOWCODER_SUMMER_SCHOOL_FILE
 from .crawler import (
     get_atcoder_ac,
     get_atcoder_rating,
@@ -38,11 +38,12 @@ class ContestRefreshAlreadyRunning(Exception):
 
 
 _CONTEST_REFRESH_LOCK = threading.Lock()
-_NOWCODER_WINTER_SCHOOL_LOCK = threading.RLock()
+_NOWCODER_SUMMER_SCHOOL_LOCK = threading.RLock()
+_HDU_MULTI_SCHOOL_LOCK = threading.RLock()
 
 
-_NOWCODER_WINTER_SCHOOL_DEFAULT = {
-    "title": "牛客寒假多校",
+_NOWCODER_SUMMER_SCHOOL_DEFAULT = {
+    "title": "牛客暑期多校",
     "contest_count": 10,
     "result_columns": [
         {"key": "live", "label": "赛时"},
@@ -77,8 +78,71 @@ _NOWCODER_WINTER_SCHOOL_DEFAULT = {
 }
 
 
-def _default_nowcoder_winter_school_data():
-    data = json.loads(json.dumps(_NOWCODER_WINTER_SCHOOL_DEFAULT, ensure_ascii=False))
+_HDU_MULTI_SCHOOL_DEFAULT = {
+    "title": "杭电多校",
+    "contest_count": 10,
+    "result_columns": [
+        {"key": "live", "label": "赛时"},
+        {"key": "upsolve", "label": "补题"},
+    ],
+    "teams": [
+        {
+            "username": "team0723",
+            "name": "教练说不拿金牌就延毕",
+            "school": "云南大学",
+            "members": ["李健阳", "吴一航", "王毅豪"],
+        },
+        {
+            "username": "team0724",
+            "name": "/u200e",
+            "school": "云南大学",
+            "members": ["邹弘辉", "房元首", "卢永轩"],
+        },
+        {
+            "username": "team0725",
+            "name": "我的刀队",
+            "school": "云南大学",
+            "members": ["吴吁柬", "樊奕洋", "苏弈宁"],
+        },
+        {
+            "username": "team0726",
+            "name": "啊对对队",
+            "school": "云南大学",
+            "members": ["蔡浩然", "朱鹭", "韩一铭"],
+        },
+        {
+            "username": "team0727",
+            "name": "我现在的要求是男娃来男娃去",
+            "school": "云南大学",
+            "members": ["王宜禾", "熊厚廣", "王开谚"],
+        },
+    ],
+}
+
+
+def _default_nowcoder_summer_school_data():
+    data = json.loads(json.dumps(_NOWCODER_SUMMER_SCHOOL_DEFAULT, ensure_ascii=False))
+    contest_count = int(data.get("contest_count") or 10)
+    result_columns = data.get("result_columns") or []
+    data["contests"] = [
+        {"key": str(index), "label": str(index), "contest_id": ""}
+        for index in range(1, contest_count + 1)
+    ]
+
+    for team in data.get("teams", []):
+        team["results"] = {
+            str(index): {
+                column.get("key", ""): ""
+                for column in result_columns
+                if column.get("key")
+            }
+            for index in range(1, contest_count + 1)
+        }
+    return data
+
+
+def _default_hdu_multi_school_data():
+    data = json.loads(json.dumps(_HDU_MULTI_SCHOOL_DEFAULT, ensure_ascii=False))
     contest_count = int(data.get("contest_count") or 10)
     result_columns = data.get("result_columns") or []
     data["contests"] = [
@@ -137,27 +201,39 @@ def _nowcoder_rank_result(rank_item):
 
 def initialize_data_files():
     initialize_database()
-    initialize_nowcoder_winter_school_file()
+    initialize_nowcoder_summer_school_file()
+    initialize_hdu_multi_school_file()
 
 
-def initialize_nowcoder_winter_school_file():
-    NOWCODER_WINTER_SCHOOL_FILE.parent.mkdir(parents=True, exist_ok=True)
-    if NOWCODER_WINTER_SCHOOL_FILE.exists():
+def initialize_nowcoder_summer_school_file():
+    NOWCODER_SUMMER_SCHOOL_FILE.parent.mkdir(parents=True, exist_ok=True)
+    if NOWCODER_SUMMER_SCHOOL_FILE.exists():
         return
 
-    NOWCODER_WINTER_SCHOOL_FILE.write_text(
-        json.dumps(_default_nowcoder_winter_school_data(), ensure_ascii=False, indent=2),
+    NOWCODER_SUMMER_SCHOOL_FILE.write_text(
+        json.dumps(_default_nowcoder_summer_school_data(), ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 
 
-def _normalize_nowcoder_winter_school_data(data):
+def initialize_hdu_multi_school_file():
+    HDU_MULTI_SCHOOL_FILE.parent.mkdir(parents=True, exist_ok=True)
+    if HDU_MULTI_SCHOOL_FILE.exists():
+        return
+
+    HDU_MULTI_SCHOOL_FILE.write_text(
+        json.dumps(_default_hdu_multi_school_data(), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
+def _normalize_nowcoder_summer_school_data(data):
     if not isinstance(data, dict):
-        data = _default_nowcoder_winter_school_data()
+        data = _default_nowcoder_summer_school_data()
 
     result_columns = data.get("result_columns")
     if not isinstance(result_columns, list) or not result_columns:
-        result_columns = _default_nowcoder_winter_school_data()["result_columns"]
+        result_columns = _default_nowcoder_summer_school_data()["result_columns"]
         data["result_columns"] = result_columns
 
     contests = data.get("contests")
@@ -182,23 +258,68 @@ def _normalize_nowcoder_winter_school_data(data):
     return data
 
 
-def get_nowcoder_winter_school_data():
-    initialize_nowcoder_winter_school_file()
-    with _NOWCODER_WINTER_SCHOOL_LOCK:
+def _normalize_hdu_multi_school_data(data):
+    if not isinstance(data, dict):
+        data = _default_hdu_multi_school_data()
+
+    result_columns = data.get("result_columns")
+    if not isinstance(result_columns, list) or not result_columns:
+        result_columns = _default_hdu_multi_school_data()["result_columns"]
+        data["result_columns"] = result_columns
+
+    contests = data.get("contests")
+    if not isinstance(contests, list) or not contests:
+        contest_count = int(data.get("contest_count") or 10)
+        contests = [
+            {"key": str(index), "label": str(index), "contest_id": ""}
+            for index in range(1, contest_count + 1)
+        ]
+        data["contests"] = contests
+
+    for index, contest in enumerate(contests, start=1):
+        if not isinstance(contest, dict):
+            contest = {"key": str(index), "label": str(index), "contest_id": ""}
+            contests[index - 1] = contest
+        contest["key"] = str(contest.get("key") or index)
+        contest["label"] = str(contest.get("label") or contest["key"])
+        contest["contest_id"] = str(contest.get("contest_id") or "")
+
+    teams = data.get("teams")
+    data["teams"] = teams if isinstance(teams, list) else []
+    for team in data["teams"]:
+        if isinstance(team, dict) and team.get("username") == "team0724" and team.get("name") == "'/u200e'":
+            team["name"] = "/u200e"
+    return data
+
+
+def get_nowcoder_summer_school_data():
+    initialize_nowcoder_summer_school_file()
+    with _NOWCODER_SUMMER_SCHOOL_LOCK:
         try:
-            data = json.loads(NOWCODER_WINTER_SCHOOL_FILE.read_text(encoding="utf-8"))
-            return _normalize_nowcoder_winter_school_data(data)
+            data = json.loads(NOWCODER_SUMMER_SCHOOL_FILE.read_text(encoding="utf-8"))
+            return _normalize_nowcoder_summer_school_data(data)
         except Exception as e:
-            logger.error(f"Error reading nowcoder winter school data: {e}")
-            return _default_nowcoder_winter_school_data()
+            logger.error(f"Error reading nowcoder summer school data: {e}")
+            return _default_nowcoder_summer_school_data()
 
 
-def update_nowcoder_winter_school_contest_ids(contest_ids):
+def get_hdu_multi_school_data():
+    initialize_hdu_multi_school_file()
+    with _HDU_MULTI_SCHOOL_LOCK:
+        try:
+            data = json.loads(HDU_MULTI_SCHOOL_FILE.read_text(encoding="utf-8"))
+            return _normalize_hdu_multi_school_data(data)
+        except Exception as e:
+            logger.error(f"Error reading HDU multi school data: {e}")
+            return _default_hdu_multi_school_data()
+
+
+def update_nowcoder_summer_school_contest_ids(contest_ids):
     if not isinstance(contest_ids, dict):
         return None
 
-    with _NOWCODER_WINTER_SCHOOL_LOCK:
-        data = get_nowcoder_winter_school_data()
+    with _NOWCODER_SUMMER_SCHOOL_LOCK:
+        data = get_nowcoder_summer_school_data()
         for contest in data.get("contests", []):
             key = str(contest.get("key") or "")
             if key not in contest_ids:
@@ -209,20 +330,43 @@ def update_nowcoder_winter_school_contest_ids(contest_ids):
                 raise ValueError("比赛 ID 只能是数字")
             contest["contest_id"] = contest_id
 
-        NOWCODER_WINTER_SCHOOL_FILE.write_text(
+        NOWCODER_SUMMER_SCHOOL_FILE.write_text(
             json.dumps(data, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
         return data
 
 
-def refresh_nowcoder_winter_school_contest(contest_key):
+def update_hdu_multi_school_contest_ids(contest_ids):
+    if not isinstance(contest_ids, dict):
+        return None
+
+    with _HDU_MULTI_SCHOOL_LOCK:
+        data = get_hdu_multi_school_data()
+        for contest in data.get("contests", []):
+            key = str(contest.get("key") or "")
+            if key not in contest_ids:
+                continue
+
+            contest_id = str(contest_ids.get(key) or "").strip()
+            if contest_id and not contest_id.isdigit():
+                raise ValueError("比赛 ID 只能是数字")
+            contest["contest_id"] = contest_id
+
+        HDU_MULTI_SCHOOL_FILE.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        return data
+
+
+def refresh_nowcoder_summer_school_contest(contest_key):
     contest_key = str(contest_key or "")
     if not contest_key:
         raise ValueError("比赛编号不能为空")
 
-    with _NOWCODER_WINTER_SCHOOL_LOCK:
-        data = get_nowcoder_winter_school_data()
+    with _NOWCODER_SUMMER_SCHOOL_LOCK:
+        data = get_nowcoder_summer_school_data()
         target_contest = next(
             (
                 contest for contest in data.get("contests", [])
@@ -255,15 +399,15 @@ def refresh_nowcoder_winter_school_contest(contest_key):
             results[contest_key] = _nowcoder_rank_result(rank_item)
             updated += 1
 
-        NOWCODER_WINTER_SCHOOL_FILE.write_text(
+        NOWCODER_SUMMER_SCHOOL_FILE.write_text(
             json.dumps(data, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
         return {"data": data, "updated": updated, "contest_id": contest_id}
 
 
-def refresh_bound_nowcoder_winter_school_contests():
-    data = get_nowcoder_winter_school_data()
+def refresh_bound_nowcoder_summer_school_contests():
+    data = get_nowcoder_summer_school_data()
     refreshed = 0
     skipped = 0
     errors = []
@@ -275,12 +419,12 @@ def refresh_bound_nowcoder_winter_school_contests():
             continue
 
         try:
-            refresh_nowcoder_winter_school_contest(contest_key)
+            refresh_nowcoder_summer_school_contest(contest_key)
             refreshed += 1
             time.sleep(2)
         except Exception as e:
             errors.append({"contest_key": contest_key, "error": str(e)})
-            logger.error(f"Error refreshing nowcoder winter school contest {contest_key}: {e}")
+            logger.error(f"Error refreshing nowcoder summer school contest {contest_key}: {e}")
 
     return {"refreshed": refreshed, "skipped": skipped, "errors": errors}
 

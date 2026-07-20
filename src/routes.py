@@ -30,16 +30,18 @@ from .database import (
 )
 from .services import (
     ContestRefreshAlreadyRunning,
-    get_nowcoder_winter_school_data,
+    get_hdu_multi_school_data,
+    get_nowcoder_summer_school_data,
     is_contest_refresh_running,
     refresh_all_contest_participation,
-    refresh_bound_nowcoder_winter_school_contests,
+    refresh_bound_nowcoder_summer_school_contests,
     refresh_contest_participation,
-    refresh_nowcoder_winter_school_contest,
+    refresh_nowcoder_summer_school_contest,
     refresh_upcoming_contests,
     refresh_user_rating,
     update_all_ratings,
-    update_nowcoder_winter_school_contest_ids,
+    update_hdu_multi_school_contest_ids,
+    update_nowcoder_summer_school_contest_ids,
 )
 
 
@@ -114,17 +116,18 @@ def get_data():
         },
         "ratings": list_ratings(),
         "pending": pending,
-        "nowcoder_winter_school": get_nowcoder_winter_school_data(),
+        "nowcoder_summer_school": get_nowcoder_summer_school_data(),
+        "hdu_multi_school": get_hdu_multi_school_data(),
     })
 
 
-@routes.route("/api/nowcoder-winter-school/contest-ids", methods=["PUT"])
+@routes.route("/api/nowcoder-summer-school/contest-ids", methods=["PUT"])
 @require_auth
-def update_nowcoder_winter_school_contest_ids_api():
+def update_nowcoder_summer_school_contest_ids_api():
     data = request.json or {}
     contest_ids = data.get("contest_ids")
     try:
-        updated = update_nowcoder_winter_school_contest_ids(contest_ids)
+        updated = update_nowcoder_summer_school_contest_ids(contest_ids)
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     except Exception as e:
@@ -132,14 +135,31 @@ def update_nowcoder_winter_school_contest_ids_api():
 
     if updated is None:
         return jsonify({"error": "contest_ids must be an object"}), 400
-    return jsonify({"status": "ok", "nowcoder_winter_school": updated})
+    return jsonify({"status": "ok", "nowcoder_summer_school": updated})
 
 
-@routes.route("/api/nowcoder-winter-school/contests/<contest_key>/refresh", methods=["POST"])
+@routes.route("/api/hdu-multi-school/contest-ids", methods=["PUT"])
 @require_auth
-def refresh_nowcoder_winter_school_contest_api(contest_key):
+def update_hdu_multi_school_contest_ids_api():
+    data = request.json or {}
+    contest_ids = data.get("contest_ids")
     try:
-        result = refresh_nowcoder_winter_school_contest(contest_key)
+        updated = update_hdu_multi_school_contest_ids(contest_ids)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    if updated is None:
+        return jsonify({"error": "contest_ids must be an object"}), 400
+    return jsonify({"status": "ok", "hdu_multi_school": updated})
+
+
+@routes.route("/api/nowcoder-summer-school/contests/<contest_key>/refresh", methods=["POST"])
+@require_auth
+def refresh_nowcoder_summer_school_contest_api(contest_key):
+    try:
+        result = refresh_nowcoder_summer_school_contest(contest_key)
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     except Exception as e:
@@ -149,15 +169,15 @@ def refresh_nowcoder_winter_school_contest_api(contest_key):
         "status": "ok",
         "updated": result["updated"],
         "contest_id": result["contest_id"],
-        "nowcoder_winter_school": result["data"],
+        "nowcoder_summer_school": result["data"],
     })
 
 
-@routes.route("/api/nowcoder-winter-school/refresh", methods=["POST"])
+@routes.route("/api/nowcoder-summer-school/refresh", methods=["POST"])
 @require_auth
-def refresh_bound_nowcoder_winter_school_contests_api():
+def refresh_bound_nowcoder_summer_school_contests_api():
     try:
-        result = refresh_bound_nowcoder_winter_school_contests()
+        result = refresh_bound_nowcoder_summer_school_contests()
         return jsonify({"status": "ok", **result})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
