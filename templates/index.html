@@ -242,6 +242,148 @@
             font-size: 13px;
             flex-wrap: wrap;
         }
+        .nowcoder-team-table {
+            border-collapse: collapse;
+            border-spacing: 0;
+            table-layout: fixed;
+            min-width: 1020px;
+        }
+        .nowcoder-team-table th,
+        .nowcoder-team-table td {
+            padding: 8px 6px;
+            font-size: 13px;
+        }
+        .nowcoder-team-table .nowcoder-team-group-col,
+        .nowcoder-team-table .nowcoder-team-name-col,
+        .nowcoder-team-table .nowcoder-team-members-col {
+            position: sticky;
+            z-index: 8;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.95);
+        }
+        .nowcoder-team-table .nowcoder-team-group-col {
+            left: 0;
+            width: 300px;
+            min-width: 300px;
+        }
+        .nowcoder-team-table .nowcoder-team-name-col {
+            left: 0;
+            width: 170px;
+            min-width: 170px;
+        }
+        .nowcoder-team-table .nowcoder-team-members-col {
+            left: 170px;
+            width: 130px;
+            min-width: 130px;
+        }
+        .nowcoder-team-table .nowcoder-result-col {
+            width: 36px;
+            min-width: 36px;
+        }
+        .nowcoder-team-table .nowcoder-contest-col {
+            width: 72px;
+            min-width: 72px;
+        }
+        .nowcoder-team-table .nowcoder-sub-header {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        .nowcoder-contest-link {
+            color: inherit;
+            text-decoration: none;
+        }
+        .nowcoder-contest-link:hover {
+            color: #00d2d1;
+            text-decoration: underline;
+        }
+        .nowcoder-contest-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .nowcoder-contest-refresh {
+            padding: 3px 7px;
+            font-size: 11px;
+            line-height: 1.2;
+            background: #00b894;
+        }
+        .nowcoder-contest-refresh:hover {
+            box-shadow: 0 4px 10px rgba(0, 184, 148, 0.35);
+        }
+        .nowcoder-bind-panel {
+            margin-bottom: 8px;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.16);
+            overflow-x: auto;
+        }
+        .nowcoder-bind-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 1020px;
+        }
+        .nowcoder-contest-bindings {
+            display: grid;
+            align-items: center;
+            gap: 12px;
+            flex: 1 1 auto;
+            min-width: 0;
+            margin-bottom: 0;
+        }
+        .nowcoder-contest-bind {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            min-width: 0;
+        }
+        .nowcoder-contest-bind span {
+            color: #94a3b8;
+            font-weight: 600;
+            min-width: 16px;
+            text-align: right;
+        }
+        .nowcoder-contest-bind input {
+            width: 100%;
+            min-width: 0;
+            padding: 5px 7px;
+            box-sizing: border-box;
+        }
+        .nowcoder-bind-save {
+            flex: 0 0 auto;
+            padding: 7px 13px;
+        }
+        .nowcoder-team-placeholder {
+            color: #64748b;
+            font-family: 'Consolas', monospace;
+        }
+        .nowcoder-result-value {
+            font-family: 'Consolas', monospace;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .nowcoder-result-live,
+        .nowcoder-result-zero {
+            color: #ff7675;
+        }
+        .nowcoder-result-upsolve {
+            color: #3491fa;
+        }
+        .nowcoder-team-name {
+            white-space: normal;
+            line-height: 1.3;
+        }
+        .nowcoder-team-members {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            line-height: 1.25;
+            min-height: 66px;
+        }
         @media screen and (max-width: 768px) {
             body { padding: 10px; font-size: 13px; }
             h1 { font-size: 1.5rem; flex-direction: column; align-items: stretch; gap: 15px; margin-bottom: 20px;}
@@ -354,6 +496,17 @@
             </div>
         </div>
         <div class="panel">
+            <h2 id="nowcoderWinterSchoolTitle">牛客寒假多校</h2>
+            <div class="admin-only nowcoder-bind-panel" id="nowcoderContestBindPanel" style="display: none;">
+                <div class="nowcoder-bind-row">
+                    <div class="nowcoder-contest-bindings" id="nowcoderContestBindings"></div>
+                    <button class="btn-sm nowcoder-bind-save" onclick="saveNowcoderContestBindings()">保存</button>
+                </div>
+            </div>
+            <div class="table-responsive" id="nowcoderWinterSchoolContainer">
+            </div>
+        </div>
+        <div class="panel">
             <h2>比赛情况
                 <button class="btn-sm refresh admin-only" id="btn-refresh-all-contests" style="display: none; float: right; margin-top: -5px;" onclick="refreshAllContests()">🔄 刷新出勤</button>
             </h2>
@@ -389,6 +542,7 @@
         const contestPageSize = 20;
         let contestCursorState = { page_size: contestPageSize, next_cursor: '', has_next: false };
         let isLoadingMoreContests = false;
+        let globalNowcoderWinterSchool = {};
 
         let sortKey = null;
         let sortDesc = true;
@@ -511,6 +665,7 @@
             renderUsers();
             renderStats();
             renderUpcoming();
+            renderNowcoderWinterSchool();
             if (isAdmin) renderPending();
             if (isAdmin) {
                 startContestRefreshPolling();
@@ -539,6 +694,7 @@
             };
             globalRatings = data.ratings || {};
             globalPending = data.pending || [];
+            globalNowcoderWinterSchool = data.nowcoder_winter_school || {};
             
             const upRes = await fetch('/api/upcoming');
             const upData = await upRes.json();
@@ -548,6 +704,7 @@
             renderStats();
             renderContestLoader();
             renderUpcoming();
+            renderNowcoderWinterSchool();
             if (isAdmin) renderPending();
             if (isAdmin) checkContestRefreshStatus();
         }
@@ -1106,6 +1263,188 @@
             });
             html += '</tbody></table>';
             container.innerHTML = html;
+        }
+
+        function renderNowcoderWinterSchool() {
+            const container = document.getElementById('nowcoderWinterSchoolContainer');
+            if (!container) return;
+
+            const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+            const displayValue = value => (
+                value === undefined || value === null || value === '' ? '-' : escapeHtml(value)
+            );
+            const titleEl = document.getElementById('nowcoderWinterSchoolTitle');
+            const schoolData = globalNowcoderWinterSchool || {};
+            if (titleEl) titleEl.innerText = schoolData.title || '牛客寒假多校';
+
+            const resultColumns = Array.isArray(schoolData.result_columns) && schoolData.result_columns.length
+                ? schoolData.result_columns
+                : [
+                    { key: 'live', label: '赛时' },
+                    { key: 'upsolve', label: '补题' }
+                ];
+            const contests = Array.isArray(schoolData.contests) && schoolData.contests.length
+                ? schoolData.contests
+                : Array.from(
+                    { length: Number(schoolData.contest_count || 10) },
+                    (_, index) => ({ key: String(index + 1), label: String(index + 1) })
+                );
+            const teams = Array.isArray(schoolData.teams) ? schoolData.teams : [];
+            renderNowcoderContestBindings(contests);
+
+            const resultColumnCount = contests.length * resultColumns.length;
+            const tableMinWidth = 300 + resultColumnCount * 36;
+            let html = `<table class="nowcoder-team-table" style="min-width:${tableMinWidth}px;">`;
+            html += '<colgroup><col style="width:170px;"><col style="width:130px;">';
+            for (let index = 0; index < resultColumnCount; index += 1) {
+                html += '<col style="width:36px;">';
+            }
+            html += '</colgroup>';
+            html += '<thead><tr><th class="nowcoder-team-group-col" colspan="2">参赛队伍</th>';
+            contests.forEach(contest => {
+                const contestLabel = typeof contest === 'object' ? contest.label : contest;
+                const contestId = typeof contest === 'object' ? String(contest.contest_id || '').trim() : '';
+                const contestTitle = displayValue(contestLabel);
+                const contestHeader = contestId
+                    ? `<a class="nowcoder-contest-link" href="https://ac.nowcoder.com/acm/contest/${encodeURIComponent(contestId)}" target="_blank">${contestTitle}</a>`
+                    : contestTitle;
+                const refreshButton = isAdmin
+                    ? `<button class="nowcoder-contest-refresh" onclick="refreshNowcoderWinterContest('${escapeHtml(String(typeof contest === 'object' ? contest.key : contest))}', this)">刷新</button>`
+                    : '';
+                html += `<th class="nowcoder-contest-col" colspan="${resultColumns.length}"><div class="nowcoder-contest-header">${contestHeader}${refreshButton}</div></th>`;
+            });
+            html += '</tr><tr>';
+            html += '<th class="nowcoder-team-name-col nowcoder-sub-header">队伍名</th>';
+            html += '<th class="nowcoder-team-members-col nowcoder-sub-header">队员</th>';
+            contests.forEach(() => {
+                resultColumns.forEach(column => {
+                    html += `<th class="nowcoder-result-col nowcoder-sub-header">${displayValue(column.label || column.key)}</th>`;
+                });
+            });
+            html += '</tr></thead><tbody>';
+
+            if (teams.length === 0) {
+                html += `<tr><td colspan="${contests.length * resultColumns.length + 2}" class="empty-state">暂无队伍数据</td></tr>`;
+            } else {
+                teams.forEach(team => {
+                    const membersHtml = (team.members || [])
+                        .map(member => `<span>${displayValue(member)}</span>`)
+                        .join('');
+                    html += `<tr><td class="nowcoder-team-name-col"><div class="nowcoder-team-name">${displayValue(team.name)}</div></td>`;
+                    html += `<td class="nowcoder-team-members-col"><div class="nowcoder-team-members">${membersHtml || '-'}</div></td>`;
+                    contests.forEach(contest => {
+                        const contestKey = String(typeof contest === 'object' ? contest.key : contest);
+                        const value = team.results && team.results[contestKey];
+                        resultColumns.forEach((column, columnIndex) => {
+                            const columnKey = column.key || '';
+                            const resultValue = value && typeof value === 'object'
+                                ? value[columnKey]
+                                : (columnIndex === 0 ? value : '');
+                            const isEmptyResult = resultValue === undefined || resultValue === null || resultValue === '';
+                            const isZeroResult = Number(resultValue) === 0 && !isEmptyResult;
+                            let resultClass = 'nowcoder-team-placeholder';
+                            if (!isEmptyResult) {
+                                resultClass = `nowcoder-result-value ${
+                                    isZeroResult
+                                        ? 'nowcoder-result-zero'
+                                        : (columnKey === 'upsolve' ? 'nowcoder-result-upsolve' : 'nowcoder-result-live')
+                                }`;
+                            }
+                            html += `<td class="nowcoder-result-col"><span class="${resultClass}">${displayValue(resultValue)}</span></td>`;
+                        });
+                    });
+                    html += '</tr>';
+                });
+            }
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function refreshNowcoderWinterContest(contestKey, button) {
+            const originalText = button ? button.innerText : '';
+            if (button) {
+                button.innerText = '...';
+                button.disabled = true;
+            }
+
+            try {
+                const res = await fetch(`/api/nowcoder-winter-school/contests/${encodeURIComponent(contestKey)}/refresh`, {
+                    method: 'POST'
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    alert(data.error || '刷新失败');
+                    return;
+                }
+
+                globalNowcoderWinterSchool = data.nowcoder_winter_school || globalNowcoderWinterSchool;
+                renderNowcoderWinterSchool();
+            } finally {
+                if (button) {
+                    button.innerText = originalText;
+                    button.disabled = false;
+                }
+            }
+        }
+
+        function renderNowcoderContestBindings(contests) {
+            const container = document.getElementById('nowcoderContestBindings');
+            if (!container) return;
+
+            if (!isAdmin) {
+                container.innerHTML = '';
+                return;
+            }
+            container.style.gridTemplateColumns = `repeat(${Math.max(contests.length, 1)}, minmax(0, 1fr))`;
+
+            const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+
+            container.innerHTML = contests.map(contest => {
+                const contestKey = String(typeof contest === 'object' ? contest.key : contest);
+                const contestLabel = typeof contest === 'object' ? (contest.label || contestKey) : contestKey;
+                const contestId = typeof contest === 'object' ? (contest.contest_id || '') : '';
+                return `
+                    <label class="nowcoder-contest-bind">
+                        <span>${escapeHtml(contestLabel)}</span>
+                        <input type="text" data-contest-key="${escapeHtml(contestKey)}" value="${escapeHtml(contestId)}" placeholder="比赛ID">
+                    </label>
+                `;
+            }).join('');
+        }
+
+        async function saveNowcoderContestBindings() {
+            const inputs = document.querySelectorAll('#nowcoderContestBindings input[data-contest-key]');
+            const contestIds = {};
+            inputs.forEach(input => {
+                contestIds[input.dataset.contestKey] = input.value.trim();
+            });
+
+            const res = await fetch('/api/nowcoder-winter-school/contest-ids', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contest_ids: contestIds })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                alert(data.error || '保存失败');
+                return;
+            }
+
+            globalNowcoderWinterSchool = data.nowcoder_winter_school || globalNowcoderWinterSchool;
+            renderNowcoderWinterSchool();
         }
 
         async function addUpcomingContest(cJsonStr) {

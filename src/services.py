@@ -1,9 +1,11 @@
+import json
 import threading
 import time
 from datetime import datetime, timedelta
 
 from loguru import logger
 
+from .config import NOWCODER_WINTER_SCHOOL_FILE
 from .crawler import (
     get_atcoder_ac,
     get_atcoder_rating,
@@ -11,6 +13,7 @@ from .crawler import (
     get_codeforces_rating,
     get_nowcoder_ac,
     get_nowcoder_rating,
+    get_nowcoder_team_rank_data,
     get_upcoming_atcoder_contests,
     get_upcoming_codeforces_contests,
     get_upcoming_nowcoder_contests,
@@ -35,6 +38,64 @@ class ContestRefreshAlreadyRunning(Exception):
 
 
 _CONTEST_REFRESH_LOCK = threading.Lock()
+_NOWCODER_WINTER_SCHOOL_LOCK = threading.RLock()
+
+
+_NOWCODER_WINTER_SCHOOL_DEFAULT = {
+    "title": "牛客寒假多校",
+    "contest_count": 10,
+    "result_columns": [
+        {"key": "live", "label": "赛时"},
+        {"key": "upsolve", "label": "补题"},
+    ],
+    "teams": [
+        {
+            "name": "教练说不拿金牌就延毕",
+            "members": ["李健阳", "吴一航", "王毅豪"],
+        },
+        {
+            "name": "海绵宝宝抓派大星抓章鱼哥抓水母",
+            "members": ["张祖翊", "姜凡", "何毅"],
+        },
+        {
+            "name": "如果你是大二，我还是推荐你打ACM",
+            "members": ["王宜禾", "熊厚廣", "王开谚"],
+        },
+        {
+            "name": "我的刀队",
+            "members": ["吴吁柬", "樊奕洋", "苏弈宁"],
+        },
+        {
+            "name": "\\u200e",
+            "members": ["邹弘辉", "房元首", "卢永轩"],
+        },
+        {
+            "name": "纵acm出题十万必嚼碎吞之",
+            "members": ["蔡浩然", "朱鹭", "韩一铭"],
+        },
+    ],
+}
+
+
+def _default_nowcoder_winter_school_data():
+    data = json.loads(json.dumps(_NOWCODER_WINTER_SCHOOL_DEFAULT, ensure_ascii=False))
+    contest_count = int(data.get("contest_count") or 10)
+    result_columns = data.get("result_columns") or []
+    data["contests"] = [
+        {"key": str(index), "label": str(index), "contest_id": ""}
+        for index in range(1, contest_count + 1)
+    ]
+
+    for team in data.get("teams", []):
+        team["results"] = {
+            str(index): {
+                column.get("key", ""): ""
+                for column in result_columns
+                if column.get("key")
+            }
+            for index in range(1, contest_count + 1)
+        }
+    return data
 
 
 def _parse_contest_time(time_str):
@@ -57,8 +118,171 @@ def _contest_has_started(contest, now=None):
     return contest_time <= (now or datetime.now())
 
 
+def _nowcoder_team_name_key(name):
+    return str(name or "").strip().replace("/", "\\").lower()
+
+
+def _nowcoder_rank_result(rank_item):
+    score_list = rank_item.get("scoreList") or []
+    upsolve_count = sum(
+        1
+        for score in score_list
+        if isinstance(score, dict) and score.get("postContestAccepted")
+    )
+    return {
+        "live": int(rank_item.get("acceptedCount") or 0),
+        "upsolve": upsolve_count,
+    }
+
+
 def initialize_data_files():
     initialize_database()
+    initialize_nowcoder_winter_school_file()
+
+
+def initialize_nowcoder_winter_school_file():
+    NOWCODER_WINTER_SCHOOL_FILE.parent.mkdir(parents=True, exist_ok=True)
+    if NOWCODER_WINTER_SCHOOL_FILE.exists():
+        return
+
+    NOWCODER_WINTER_SCHOOL_FILE.write_text(
+        json.dumps(_default_nowcoder_winter_school_data(), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
+def _normalize_nowcoder_winter_school_data(data):
+    if not isinstance(data, dict):
+        data = _default_nowcoder_winter_school_data()
+
+    result_columns = data.get("result_columns")
+    if not isinstance(result_columns, list) or not result_columns:
+        result_columns = _default_nowcoder_winter_school_data()["result_columns"]
+        data["result_columns"] = result_columns
+
+    contests = data.get("contests")
+    if not isinstance(contests, list) or not contests:
+        contest_count = int(data.get("contest_count") or 10)
+        contests = [
+            {"key": str(index), "label": str(index), "contest_id": ""}
+            for index in range(1, contest_count + 1)
+        ]
+        data["contests"] = contests
+
+    for index, contest in enumerate(contests, start=1):
+        if not isinstance(contest, dict):
+            contest = {"key": str(index), "label": str(index), "contest_id": ""}
+            contests[index - 1] = contest
+        contest["key"] = str(contest.get("key") or index)
+        contest["label"] = str(contest.get("label") or contest["key"])
+        contest["contest_id"] = str(contest.get("contest_id") or "")
+
+    teams = data.get("teams")
+    data["teams"] = teams if isinstance(teams, list) else []
+    return data
+
+
+def get_nowcoder_winter_school_data():
+    initialize_nowcoder_winter_school_file()
+    with _NOWCODER_WINTER_SCHOOL_LOCK:
+        try:
+            data = json.loads(NOWCODER_WINTER_SCHOOL_FILE.read_text(encoding="utf-8"))
+            return _normalize_nowcoder_winter_school_data(data)
+        except Exception as e:
+            logger.error(f"Error reading nowcoder winter school data: {e}")
+            return _default_nowcoder_winter_school_data()
+
+
+def update_nowcoder_winter_school_contest_ids(contest_ids):
+    if not isinstance(contest_ids, dict):
+        return None
+
+    with _NOWCODER_WINTER_SCHOOL_LOCK:
+        data = get_nowcoder_winter_school_data()
+        for contest in data.get("contests", []):
+            key = str(contest.get("key") or "")
+            if key not in contest_ids:
+                continue
+
+            contest_id = str(contest_ids.get(key) or "").strip()
+            if contest_id and not contest_id.isdigit():
+                raise ValueError("比赛 ID 只能是数字")
+            contest["contest_id"] = contest_id
+
+        NOWCODER_WINTER_SCHOOL_FILE.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        return data
+
+
+def refresh_nowcoder_winter_school_contest(contest_key):
+    contest_key = str(contest_key or "")
+    if not contest_key:
+        raise ValueError("比赛编号不能为空")
+
+    with _NOWCODER_WINTER_SCHOOL_LOCK:
+        data = get_nowcoder_winter_school_data()
+        target_contest = next(
+            (
+                contest for contest in data.get("contests", [])
+                if str(contest.get("key") or "") == contest_key
+            ),
+            None,
+        )
+        if not target_contest:
+            raise ValueError("比赛不存在")
+
+        contest_id = str(target_contest.get("contest_id") or "").strip()
+        if not contest_id:
+            raise ValueError("请先绑定比赛 ID")
+
+        rank_data = get_nowcoder_team_rank_data(contest_id)
+        rank_by_team = {
+            _nowcoder_team_name_key(rank_item.get("userName")): rank_item
+            for rank_item in rank_data
+            if isinstance(rank_item, dict)
+        }
+
+        updated = 0
+        for team in data.get("teams", []):
+            team_key = _nowcoder_team_name_key(team.get("name"))
+            rank_item = rank_by_team.get(team_key)
+            if not rank_item:
+                continue
+
+            results = team.setdefault("results", {})
+            results[contest_key] = _nowcoder_rank_result(rank_item)
+            updated += 1
+
+        NOWCODER_WINTER_SCHOOL_FILE.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        return {"data": data, "updated": updated, "contest_id": contest_id}
+
+
+def refresh_bound_nowcoder_winter_school_contests():
+    data = get_nowcoder_winter_school_data()
+    refreshed = 0
+    skipped = 0
+    errors = []
+
+    for contest in data.get("contests", []):
+        contest_key = str(contest.get("key") or "")
+        if not str(contest.get("contest_id") or "").strip():
+            skipped += 1
+            continue
+
+        try:
+            refresh_nowcoder_winter_school_contest(contest_key)
+            refreshed += 1
+            time.sleep(2)
+        except Exception as e:
+            errors.append({"contest_key": contest_key, "error": str(e)})
+            logger.error(f"Error refreshing nowcoder winter school contest {contest_key}: {e}")
+
+    return {"refreshed": refreshed, "skipped": skipped, "errors": errors}
 
 
 def refresh_upcoming_contests():

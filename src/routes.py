@@ -30,12 +30,16 @@ from .database import (
 )
 from .services import (
     ContestRefreshAlreadyRunning,
+    get_nowcoder_winter_school_data,
     is_contest_refresh_running,
     refresh_all_contest_participation,
+    refresh_bound_nowcoder_winter_school_contests,
     refresh_contest_participation,
+    refresh_nowcoder_winter_school_contest,
     refresh_upcoming_contests,
     refresh_user_rating,
     update_all_ratings,
+    update_nowcoder_winter_school_contest_ids,
 )
 
 
@@ -110,7 +114,53 @@ def get_data():
         },
         "ratings": list_ratings(),
         "pending": pending,
+        "nowcoder_winter_school": get_nowcoder_winter_school_data(),
     })
+
+
+@routes.route("/api/nowcoder-winter-school/contest-ids", methods=["PUT"])
+@require_auth
+def update_nowcoder_winter_school_contest_ids_api():
+    data = request.json or {}
+    contest_ids = data.get("contest_ids")
+    try:
+        updated = update_nowcoder_winter_school_contest_ids(contest_ids)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    if updated is None:
+        return jsonify({"error": "contest_ids must be an object"}), 400
+    return jsonify({"status": "ok", "nowcoder_winter_school": updated})
+
+
+@routes.route("/api/nowcoder-winter-school/contests/<contest_key>/refresh", methods=["POST"])
+@require_auth
+def refresh_nowcoder_winter_school_contest_api(contest_key):
+    try:
+        result = refresh_nowcoder_winter_school_contest(contest_key)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({
+        "status": "ok",
+        "updated": result["updated"],
+        "contest_id": result["contest_id"],
+        "nowcoder_winter_school": result["data"],
+    })
+
+
+@routes.route("/api/nowcoder-winter-school/refresh", methods=["POST"])
+@require_auth
+def refresh_bound_nowcoder_winter_school_contests_api():
+    try:
+        result = refresh_bound_nowcoder_winter_school_contests()
+        return jsonify({"status": "ok", **result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @routes.route("/api/apply", methods=["POST"])

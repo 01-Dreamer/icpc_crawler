@@ -349,6 +349,42 @@ def get_nowcoder_ac(contest_id, user_id):
     return len(accepted)
 
 
+def get_nowcoder_team_rank_data(contest_id, search_user_name="云南大学"):
+    if not contest_id:
+        return []
+
+    url = "https://ac.nowcoder.com/acm-heavy/acm/contest/real-time-rank-data"
+    params = {
+        "token": "",
+        "id": str(contest_id),
+        "searchUserName": search_user_name,
+        "limit": "0",
+        "_": str(int(time.time() * 1000)),
+    }
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+        ),
+        "Referer": f"https://ac.nowcoder.com/acm/contest/{contest_id}",
+    }
+
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=15)
+        response.raise_for_status()
+        payload = response.json()
+        if payload.get("code") != 0:
+            logger.error(f"error fetching nowcoder team rank for {contest_id}: {payload}")
+            return []
+
+        data = payload.get("data") or {}
+        rank_data = data.get("rankData") or []
+        return rank_data if isinstance(rank_data, list) else []
+    except Exception as e:
+        logger.error(f"error fetching nowcoder team rank for {contest_id}: {e}")
+        return []
+
+
 if __name__ == "__main__":
     print(get_codeforces_ac(2226, "oviNE"))
     print(get_atcoder_ac("abc457", "Ovine"))
