@@ -263,18 +263,18 @@
         }
         .nowcoder-team-table .nowcoder-team-group-col {
             left: 0;
-            width: 300px;
-            min-width: 300px;
+            width: 198px;
+            min-width: 198px;
         }
         .nowcoder-team-table .nowcoder-team-name-col {
             left: 0;
-            width: 170px;
-            min-width: 170px;
+            width: 98px;
+            min-width: 98px;
         }
         .nowcoder-team-table .nowcoder-team-members-col {
-            left: 170px;
-            width: 130px;
-            min-width: 130px;
+            left: 98px;
+            width: 100px;
+            min-width: 100px;
         }
         .nowcoder-team-table .nowcoder-result-col {
             width: 36px;
@@ -1301,9 +1301,9 @@
             renderNowcoderContestBindings(contests);
 
             const resultColumnCount = contests.length * resultColumns.length;
-            const tableMinWidth = 300 + resultColumnCount * 36;
+            const tableMinWidth = 198 + resultColumnCount * 36;
             let html = `<table class="nowcoder-team-table" style="min-width:${tableMinWidth}px;">`;
-            html += '<colgroup><col style="width:170px;"><col style="width:130px;">';
+            html += '<colgroup><col style="width:98px;"><col style="width:100px;">';
             for (let index = 0; index < resultColumnCount; index += 1) {
                 html += '<col style="width:36px;">';
             }
