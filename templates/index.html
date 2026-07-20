@@ -208,6 +208,7 @@
         .contest-link { font-size: 12px; }
         .status-yes { color: #00b894; font-weight: bold; font-family: 'Consolas', monospace; font-size: 16px; text-shadow: 0 0 5px rgba(0, 184, 148, 0.5);}
         .status-no { color: #ff7675; font-weight: bold; font-family: 'Consolas', monospace; font-size: 16px;}
+        .status-pending { color: #64748b; font-weight: bold; font-family: 'Consolas', monospace; font-size: 16px;}
         .contest-details {
             max-height: 0;
             opacity: 0;
@@ -1147,18 +1148,40 @@
                 }
             });
         }
+        function parseContestDate(value) {
+            if (!value) return null;
+
+            const normalized = String(value).trim().replace('T', ' ');
+            const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})(?::(\d{2}))?/);
+            if (match) {
+                return new Date(
+                    Number(match[1]),
+                    Number(match[2]) - 1,
+                    Number(match[3]),
+                    Number(match[4]),
+                    Number(match[5]),
+                    Number(match[6] || 0)
+                );
+            }
+
+            const parsed = new Date(value);
+            return Number.isNaN(parsed.getTime()) ? null : parsed;
+        }
+
         function renderStats() {
             const container = document.getElementById('statsTableContainer');
             if (globalContests.length === 0) {
                 container.innerHTML = '<div class="empty-state">目前没有收录任何比赛数据</div>';
                 return;
             }
+            const now = new Date();
             let html = '<table><thead><tr>';
             html += '<th style="text-align: left; min-width: 250px;">比赛情况</th>';
             globalUsers.forEach(u => { html += `<th>${u.name}</th>`; });
             html += '</tr></thead><tbody>';
             globalContests.forEach(c => {
-                const isUpcoming = c.time && new Date(c.time) > new Date();
+                const contestDate = parseContestDate(c.time);
+                const isUpcoming = contestDate && contestDate > now;
                 const rowClass = isUpcoming ? ' class="upcoming-contest"' : '';
                 html += `<tr${rowClass}>`;
                 const linkHtml = c.link ? `<a class="contest-link" href="${c.link}" target="_blank">🔗 前往比赛页面</a>` : '';
@@ -1183,6 +1206,11 @@
                     </td>
                 `;
                 globalUsers.forEach(u => {
+                    if (isUpcoming) {
+                        html += '<td><span class="status-pending">-</span></td>';
+                        return;
+                    }
+
                     const rawCount = c.results && c.results[u.id];
                     const acCount = Number(rawCount || 0);
                     html += `<td><span class="${acCount > 0 ? 'status-yes' : 'status-no'}">${acCount}</span></td>`;
