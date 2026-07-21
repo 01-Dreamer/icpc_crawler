@@ -308,9 +308,23 @@
         }
         .nowcoder-contest-header {
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            line-height: 1.2;
+        }
+        .nowcoder-contest-main {
+            display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
+        }
+        .nowcoder-contest-time {
+            color: #00d2d1;
+            font-size: 10px;
+            font-weight: 600;
+            white-space: normal;
         }
         .nowcoder-contest-refresh {
             padding: 3px 7px;
@@ -1334,7 +1348,19 @@
                 showRefresh: true,
                 renderBindings: renderNowcoderContestBindings,
                 refreshFunctionName: 'refreshNowcoderSummerContest',
-                contestUrl: contestId => `https://ac.nowcoder.com/acm/contest/${encodeURIComponent(contestId)}`
+                contestUrl: contestId => `https://ac.nowcoder.com/acm/contest/${encodeURIComponent(contestId)}`,
+                contestTimes: {
+                    '1': '7/17 12:00',
+                    '2': '7/22 12:00',
+                    '3': '7/24 12:00',
+                    '4': '7/29 12:00',
+                    '5': '7/31 12:00',
+                    '6': '8/5 12:00',
+                    '7': '8/7 12:00',
+                    '8': '8/12 12:00',
+                    '9': '8/14 12:00',
+                    '10': '8/19 12:00'
+                }
             });
         }
 
@@ -1347,7 +1373,19 @@
                 showRefresh: true,
                 renderBindings: renderHduContestBindings,
                 refreshFunctionName: 'refreshHduMultiContest',
-                contestUrl: contestId => `https://acm.hdu.edu.cn/contest/problems?cid=${encodeURIComponent(contestId)}`
+                contestUrl: contestId => `https://acm.hdu.edu.cn/contest/problems?cid=${encodeURIComponent(contestId)}`,
+                contestTimes: {
+                    '1': '7/21 12:00',
+                    '2': '7/23 12:00',
+                    '3': '7/28 12:00',
+                    '4': '7/30 12:00',
+                    '5': '8/4 12:00',
+                    '6': '8/6 12:00',
+                    '7': '8/11 12:00',
+                    '8': '8/13 12:00',
+                    '9': '8/18 12:00',
+                    '10': '8/20 12:00'
+                }
             });
         }
 
@@ -1406,7 +1444,10 @@
                 const refreshButton = isAdmin && options.showRefresh && options.refreshFunctionName
                     ? `<button class="nowcoder-contest-refresh" onclick="${options.refreshFunctionName}('${contestKey}', this)">刷新</button>`
                     : '';
-                html += `<th class="nowcoder-contest-col" colspan="${resultColumns.length}"><div class="nowcoder-contest-header">${contestHeader}${refreshButton}</div></th>`;
+                const contestTime = options.contestTimes && options.contestTimes[contestKey]
+                    ? `<div class="nowcoder-contest-time">${escapeHtml(options.contestTimes[contestKey])}</div>`
+                    : '';
+                html += `<th class="nowcoder-contest-col" colspan="${resultColumns.length}"><div class="nowcoder-contest-header"><div class="nowcoder-contest-main">${contestHeader}${refreshButton}</div>${contestTime}</div></th>`;
             });
             html += '</tr><tr>';
             html += '<th class="nowcoder-team-name-col nowcoder-sub-header">队伍名</th>';

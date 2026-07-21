@@ -3538,3 +3538,5 @@
 2026-07-21 09:13:34.998 | INFO     | src.routes:index:69 - Main page accessed by IP: 116.233.212.4
 2026-07-21 09:29:44.721 | INFO     | src.routes:index:69 - Main page accessed by IP: 39.129.5.52
 2026-07-21 09:29:46.273 | INFO     | src.routes:index:69 - Main page accessed by IP: 39.129.5.52
+2026-07-21 09:37:24.281 | INFO     | src.routes:index:69 - Main page accessed by IP: 127.0.0.1
+2026-07-21 09:38:37.001 | INFO     | src.routes:index:69 - Main page accessed by IP: 127.0.0.1
