@@ -30,12 +30,12 @@
     {
       "key": "4",
       "label": "4",
-      "contest_id": ""
+      "contest_id": "133879"
     },
     {
       "key": "5",
       "label": "5",
-      "contest_id": ""
+      "contest_id": "133880"
     },
     {
       "key": "6",
@@ -324,7 +324,7 @@
       "results": {
         "1": {
           "live": 2,
-          "upsolve": 3
+          "upsolve": 4
         },
         "2": {
           "live": "",
