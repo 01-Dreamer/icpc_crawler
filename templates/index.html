@@ -1566,8 +1566,31 @@
             }).join('');
         }
 
-        function refreshHduMultiContest(contestKey, button) {
-            alert(`杭电多校第 ${contestKey} 场刷新逻辑稍后接入`);
+        async function refreshHduMultiContest(contestKey, button) {
+            const originalText = button ? button.innerText : '';
+            if (button) {
+                button.innerText = '...';
+                button.disabled = true;
+            }
+
+            try {
+                const res = await fetch(`/api/hdu-multi-school/contests/${encodeURIComponent(contestKey)}/refresh`, {
+                    method: 'POST'
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    alert(data.error || '刷新失败');
+                    return;
+                }
+
+                globalHduMultiSchool = data.hdu_multi_school || globalHduMultiSchool;
+                renderHduMultiSchool();
+            } finally {
+                if (button) {
+                    button.innerText = originalText;
+                    button.disabled = false;
+                }
+            }
         }
 
         async function saveNowcoderContestBindings() {

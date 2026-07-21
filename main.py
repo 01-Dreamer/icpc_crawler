@@ -7,6 +7,7 @@ from loguru import logger
 
 from src.config import (
     DAILY_REFRESH_HOUR,
+    HDU_MULTI_SCHOOL_REFRESH_HOUR,
     LOG_FILE,
     NOWCODER_SUMMER_SCHOOL_REFRESH_HOUR,
     SECRET_KEY,
@@ -16,6 +17,7 @@ from src.config import (
 from src.routes import routes
 from src.services import (
     initialize_data_files,
+    refresh_bound_hdu_multi_school_contests,
     refresh_bound_nowcoder_summer_school_contests,
     refresh_upcoming_contests,
     run_daily_refresh,
@@ -68,6 +70,27 @@ def nowcoder_summer_school_background_job():
             logger.error(f"Scheduled task error refreshing NowCoder summer school: {e}")
 
 
+def hdu_multi_school_background_job():
+    while True:
+        now = datetime.now()
+        next_run = now.replace(
+            hour=HDU_MULTI_SCHOOL_REFRESH_HOUR,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+        if now >= next_run:
+            next_run += timedelta(days=1)
+
+        sleep_seconds = (next_run - now).total_seconds()
+        time.sleep(sleep_seconds)
+
+        try:
+            refresh_bound_hdu_multi_school_contests()
+        except Exception as e:
+            logger.error(f"Scheduled task error refreshing HDU multi school: {e}")
+
+
 def create_app():
     initialize_data_files()
 
@@ -82,6 +105,7 @@ def create_app():
 
     threading.Thread(target=background_job, daemon=True).start()
     threading.Thread(target=nowcoder_summer_school_background_job, daemon=True).start()
+    threading.Thread(target=hdu_multi_school_background_job, daemon=True).start()
     return app
 
 

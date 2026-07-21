@@ -385,6 +385,79 @@ def get_nowcoder_team_rank_data(contest_id, search_user_name="云南大学"):
         return []
 
 
+def get_hdu_team_rank_data(
+    contest_id,
+    search="云南大学",
+    username="guest",
+    password="guest",
+):
+    if not contest_id:
+        return []
+
+    session = requests.Session()
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+        ),
+    }
+    contest_id = str(contest_id)
+    login_url = f"https://acm.hdu.edu.cn/contest/login?cid={contest_id}"
+    rank_url = "https://acm.hdu.edu.cn/contest/rank"
+
+    try:
+        session.get(login_url, headers=headers, timeout=15)
+        login_response = session.post(
+            login_url,
+            data={"username": username, "password": password},
+            headers={**headers, "Referer": login_url},
+            timeout=15,
+            allow_redirects=True,
+        )
+        login_response.raise_for_status()
+
+        response = session.get(
+            rank_url,
+            params={"cid": contest_id, "group": "all", "search": search},
+            headers={**headers, "Referer": f"https://acm.hdu.edu.cn/contest/problems?cid={contest_id}"},
+            timeout=15,
+        )
+        response.raise_for_status()
+        response.encoding = "utf-8"
+        if "/contest/login" in response.url:
+            logger.error(f"error fetching HDU team rank for {contest_id}: login required")
+            return []
+
+        soup = BeautifulSoup(response.text, "html.parser")
+        rank_data = []
+        for row in soup.select("tr.page-card-row"):
+            cols = row.find_all("td")
+            if len(cols) < 3:
+                continue
+
+            author_lines = [
+                line.strip()
+                for line in cols[1].get_text("\n", strip=True).splitlines()
+                if line.strip()
+            ]
+            if not author_lines:
+                continue
+
+            solved_text = cols[2].get_text(strip=True)
+            solved_match = re.search(r"\d+", solved_text)
+            rank_data.append({
+                "username": author_lines[0],
+                "name": author_lines[1] if len(author_lines) > 1 else "",
+                "school": author_lines[2] if len(author_lines) > 2 else "",
+                "solved": int(solved_match.group()) if solved_match else 0,
+            })
+
+        return rank_data
+    except Exception as e:
+        logger.error(f"error fetching HDU team rank for {contest_id}: {e}")
+        return []
+
+
 if __name__ == "__main__":
     print(get_codeforces_ac(2226, "oviNE"))
     print(get_atcoder_ac("abc457", "Ovine"))

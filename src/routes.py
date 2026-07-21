@@ -34,8 +34,10 @@ from .services import (
     get_nowcoder_summer_school_data,
     is_contest_refresh_running,
     refresh_all_contest_participation,
+    refresh_bound_hdu_multi_school_contests,
     refresh_bound_nowcoder_summer_school_contests,
     refresh_contest_participation,
+    refresh_hdu_multi_school_contest,
     refresh_nowcoder_summer_school_contest,
     refresh_upcoming_contests,
     refresh_user_rating,
@@ -173,11 +175,39 @@ def refresh_nowcoder_summer_school_contest_api(contest_key):
     })
 
 
+@routes.route("/api/hdu-multi-school/contests/<contest_key>/refresh", methods=["POST"])
+@require_auth
+def refresh_hdu_multi_school_contest_api(contest_key):
+    try:
+        result = refresh_hdu_multi_school_contest(contest_key)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({
+        "status": "ok",
+        "updated": result["updated"],
+        "contest_id": result["contest_id"],
+        "hdu_multi_school": result["data"],
+    })
+
+
 @routes.route("/api/nowcoder-summer-school/refresh", methods=["POST"])
 @require_auth
 def refresh_bound_nowcoder_summer_school_contests_api():
     try:
         result = refresh_bound_nowcoder_summer_school_contests()
+        return jsonify({"status": "ok", **result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@routes.route("/api/hdu-multi-school/refresh", methods=["POST"])
+@require_auth
+def refresh_bound_hdu_multi_school_contests_api():
+    try:
+        result = refresh_bound_hdu_multi_school_contests()
         return jsonify({"status": "ok", **result})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

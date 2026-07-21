@@ -11,6 +11,7 @@ from .crawler import (
     get_atcoder_rating,
     get_codeforces_ac,
     get_codeforces_rating,
+    get_hdu_team_rank_data,
     get_nowcoder_ac,
     get_nowcoder_rating,
     get_nowcoder_team_rank_data,
@@ -196,6 +197,17 @@ def _nowcoder_rank_result(rank_item):
     return {
         "live": int(rank_item.get("acceptedCount") or 0),
         "upsolve": upsolve_count,
+    }
+
+
+def _hdu_team_username_key(username):
+    return str(username or "").strip().lower()
+
+
+def _hdu_rank_result(rank_item):
+    return {
+        "live": int(rank_item.get("solved") or 0),
+        "upsolve": 0,
     }
 
 
@@ -425,6 +437,75 @@ def refresh_bound_nowcoder_summer_school_contests():
         except Exception as e:
             errors.append({"contest_key": contest_key, "error": str(e)})
             logger.error(f"Error refreshing nowcoder summer school contest {contest_key}: {e}")
+
+    return {"refreshed": refreshed, "skipped": skipped, "errors": errors}
+
+
+def refresh_hdu_multi_school_contest(contest_key):
+    contest_key = str(contest_key or "")
+    if not contest_key:
+        raise ValueError("比赛编号不能为空")
+
+    with _HDU_MULTI_SCHOOL_LOCK:
+        data = get_hdu_multi_school_data()
+        target_contest = next(
+            (
+                contest for contest in data.get("contests", [])
+                if str(contest.get("key") or "") == contest_key
+            ),
+            None,
+        )
+        if not target_contest:
+            raise ValueError("比赛不存在")
+
+        contest_id = str(target_contest.get("contest_id") or "").strip()
+        if not contest_id:
+            raise ValueError("请先绑定比赛 ID")
+
+        rank_data = get_hdu_team_rank_data(contest_id)
+        rank_by_username = {
+            _hdu_team_username_key(rank_item.get("username")): rank_item
+            for rank_item in rank_data
+            if isinstance(rank_item, dict)
+        }
+
+        updated = 0
+        for team in data.get("teams", []):
+            team_key = _hdu_team_username_key(team.get("username"))
+            rank_item = rank_by_username.get(team_key)
+            if not rank_item:
+                continue
+
+            results = team.setdefault("results", {})
+            results[contest_key] = _hdu_rank_result(rank_item)
+            updated += 1
+
+        HDU_MULTI_SCHOOL_FILE.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        return {"data": data, "updated": updated, "contest_id": contest_id}
+
+
+def refresh_bound_hdu_multi_school_contests():
+    data = get_hdu_multi_school_data()
+    refreshed = 0
+    skipped = 0
+    errors = []
+
+    for contest in data.get("contests", []):
+        contest_key = str(contest.get("key") or "")
+        if not str(contest.get("contest_id") or "").strip():
+            skipped += 1
+            continue
+
+        try:
+            refresh_hdu_multi_school_contest(contest_key)
+            refreshed += 1
+            time.sleep(2)
+        except Exception as e:
+            errors.append({"contest_key": contest_key, "error": str(e)})
+            logger.error(f"Error refreshing HDU multi school contest {contest_key}: {e}")
 
     return {"refreshed": refreshed, "skipped": skipped, "errors": errors}
 
