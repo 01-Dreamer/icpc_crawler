@@ -445,11 +445,17 @@ def get_hdu_team_rank_data(
 
             solved_text = cols[2].get_text(strip=True)
             solved_match = re.search(r"\d+", solved_text)
+            upsolve_count = sum(
+                1
+                for col in cols[4:]
+                if "rank-status-solved" in (col.get("class") or [])
+            )
             rank_data.append({
                 "username": author_lines[0],
                 "name": author_lines[1] if len(author_lines) > 1 else "",
                 "school": author_lines[2] if len(author_lines) > 2 else "",
                 "solved": int(solved_match.group()) if solved_match else 0,
+                "upsolve": upsolve_count,
             })
 
         return rank_data

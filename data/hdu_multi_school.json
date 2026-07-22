@@ -75,7 +75,7 @@
       "results": {
         "1": {
           "live": 1,
-          "upsolve": 0
+          "upsolve": 2
         },
         "2": {
           "live": "",
@@ -230,7 +230,7 @@
       ],
       "results": {
         "1": {
-          "live": 2,
+          "live": 3,
           "upsolve": 0
         },
         "2": {

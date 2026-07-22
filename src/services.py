@@ -207,7 +207,7 @@ def _hdu_team_username_key(username):
 def _hdu_rank_result(rank_item):
     return {
         "live": int(rank_item.get("solved") or 0),
-        "upsolve": 0,
+        "upsolve": int(rank_item.get("upsolve") or 0),
     }
 
 
