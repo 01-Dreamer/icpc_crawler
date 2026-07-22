@@ -1,4 +1,5 @@
 import json
+import math
 import threading
 import time
 from datetime import datetime, timedelta
@@ -11,10 +12,10 @@ from .crawler import (
     get_atcoder_rating,
     get_codeforces_ac,
     get_codeforces_rating,
-    get_hdu_team_rank_data,
+    get_hdu_team_rank_payload,
     get_nowcoder_ac,
     get_nowcoder_rating,
-    get_nowcoder_team_rank_data,
+    get_nowcoder_team_rank_payload,
     get_upcoming_atcoder_contests,
     get_upcoming_codeforces_contests,
     get_upcoming_nowcoder_contests,
@@ -187,28 +188,64 @@ def _nowcoder_team_name_key(name):
     return str(name or "").strip().replace("/", "\\").lower()
 
 
-def _nowcoder_rank_result(rank_item):
+def _rank_award(rank, total):
+    try:
+        rank = int(rank or 0)
+        total = int(total or 0)
+    except (TypeError, ValueError):
+        return {}
+
+    if rank <= 0 or total <= 0:
+        return {}
+
+    gold_count = math.ceil(total * 0.1)
+    silver_count = math.ceil(total * 0.2)
+    bronze_count = math.ceil(total * 0.3)
+    iron_count = math.ceil(total * 0.4)
+
+    if rank <= gold_count:
+        return {"award": "gold", "award_label": "金"}
+    if rank <= gold_count + silver_count:
+        return {"award": "silver", "award_label": "银"}
+    if rank <= gold_count + silver_count + bronze_count:
+        return {"award": "bronze", "award_label": "铜"}
+    if rank <= gold_count + silver_count + bronze_count + iron_count:
+        return {"award": "iron", "award_label": "铁"}
+    return {}
+
+
+def _nowcoder_rank_result(rank_item, rank_total=0):
     score_list = rank_item.get("scoreList") or []
     upsolve_count = sum(
         1
         for score in score_list
         if isinstance(score, dict) and score.get("postContestAccepted")
     )
-    return {
+    rank = int(rank_item.get("ranking") or 0)
+    result = {
         "live": int(rank_item.get("acceptedCount") or 0),
         "upsolve": upsolve_count,
+        "rank": rank,
+        "rank_total": int(rank_total or 0),
     }
+    result.update(_rank_award(rank, rank_total))
+    return result
 
 
 def _hdu_team_username_key(username):
     return str(username or "").strip().lower()
 
 
-def _hdu_rank_result(rank_item):
-    return {
+def _hdu_rank_result(rank_item, rank_total=0):
+    rank = int(rank_item.get("rank") or 0)
+    result = {
         "live": int(rank_item.get("solved") or 0),
         "upsolve": int(rank_item.get("upsolve") or 0),
+        "rank": rank,
+        "rank_total": int(rank_total or 0),
     }
+    result.update(_rank_award(rank, rank_total))
+    return result
 
 
 def initialize_data_files():
@@ -393,7 +430,10 @@ def refresh_nowcoder_summer_school_contest(contest_key):
         if not contest_id:
             raise ValueError("请先绑定比赛 ID")
 
-        rank_data = get_nowcoder_team_rank_data(contest_id)
+        rank_payload = get_nowcoder_team_rank_payload(contest_id)
+        rank_data = rank_payload.get("rank_data") or []
+        rank_total = int(rank_payload.get("rank_count") or 0)
+        target_contest["rank_total"] = rank_total
         rank_by_team = {
             _nowcoder_team_name_key(rank_item.get("userName")): rank_item
             for rank_item in rank_data
@@ -408,7 +448,7 @@ def refresh_nowcoder_summer_school_contest(contest_key):
                 continue
 
             results = team.setdefault("results", {})
-            results[contest_key] = _nowcoder_rank_result(rank_item)
+            results[contest_key] = _nowcoder_rank_result(rank_item, rank_total)
             updated += 1
 
         NOWCODER_SUMMER_SCHOOL_FILE.write_text(
@@ -462,7 +502,10 @@ def refresh_hdu_multi_school_contest(contest_key):
         if not contest_id:
             raise ValueError("请先绑定比赛 ID")
 
-        rank_data = get_hdu_team_rank_data(contest_id)
+        rank_payload = get_hdu_team_rank_payload(contest_id)
+        rank_data = rank_payload.get("rank_data") or []
+        rank_total = int(rank_payload.get("rank_count") or 0)
+        target_contest["rank_total"] = rank_total
         rank_by_username = {
             _hdu_team_username_key(rank_item.get("username")): rank_item
             for rank_item in rank_data
@@ -477,7 +520,7 @@ def refresh_hdu_multi_school_contest(contest_key):
                 continue
 
             results = team.setdefault("results", {})
-            results[contest_key] = _hdu_rank_result(rank_item)
+            results[contest_key] = _hdu_rank_result(rank_item, rank_total)
             updated += 1
 
         HDU_MULTI_SCHOOL_FILE.write_text(

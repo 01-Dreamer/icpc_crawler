@@ -323,6 +323,26 @@
             width: 36px;
             min-width: 36px;
         }
+        .multi-school-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .multi-school-award-legend {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-left: auto;
+        }
+        .multi-school-award-legend .nowcoder-result-rank {
+            min-width: auto;
+            padding: 4px 8px;
+            font-size: 12px;
+            line-height: 1;
+        }
         .nowcoder-team-table .nowcoder-contest-col {
             width: 72px;
             min-width: 72px;
@@ -420,6 +440,106 @@
             font-family: 'Consolas', monospace;
             font-size: 15px;
             font-weight: 700;
+        }
+        .nowcoder-result-group-col {
+            width: 72px;
+            min-width: 72px;
+        }
+        .nowcoder-result-group {
+            display: grid;
+            grid-template-rows: auto auto;
+            align-items: center;
+            gap: 8px;
+            min-height: 46px;
+        }
+        .nowcoder-result-values {
+            display: grid;
+            align-items: center;
+        }
+        .nowcoder-result-rank {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-width: 34px;
+            padding: 2px 6px;
+            margin: 0 auto;
+            border: 1px solid rgba(255, 255, 255, 0.72);
+            border-radius: 5px;
+            color: #f59e0b;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .nowcoder-award-icon {
+            display: inline-block;
+            position: relative;
+            flex: 0 0 auto;
+            width: 11px;
+            height: 11px;
+        }
+        .nowcoder-award-gold .nowcoder-award-icon,
+        .nowcoder-award-silver .nowcoder-award-icon,
+        .nowcoder-award-bronze .nowcoder-award-icon {
+            border-radius: 50%;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+        }
+        .nowcoder-award-gold .nowcoder-award-icon::before,
+        .nowcoder-award-silver .nowcoder-award-icon::before,
+        .nowcoder-award-bronze .nowcoder-award-icon::before {
+            content: "";
+            position: absolute;
+            left: 2px;
+            top: -5px;
+            width: 7px;
+            height: 6px;
+            clip-path: polygon(0 0, 45% 0, 50% 100%, 0 100%, 20% 50%);
+            background: rgba(96, 165, 250, 0.9);
+        }
+        .nowcoder-award-gold .nowcoder-award-icon::after,
+        .nowcoder-award-silver .nowcoder-award-icon::after,
+        .nowcoder-award-bronze .nowcoder-award-icon::after {
+            content: "";
+            position: absolute;
+            right: 2px;
+            top: -5px;
+            width: 7px;
+            height: 6px;
+            clip-path: polygon(55% 0, 100% 0, 80% 50%, 100% 100%, 50% 100%);
+            background: rgba(248, 113, 113, 0.9);
+        }
+        .nowcoder-award-gold {
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.12);
+        }
+        .nowcoder-award-gold .nowcoder-award-icon {
+            background: linear-gradient(135deg, #fde68a, #f59e0b 65%, #b45309);
+        }
+        .nowcoder-award-silver {
+            color: #e5e7eb;
+            background: rgba(229, 231, 235, 0.1);
+        }
+        .nowcoder-award-silver .nowcoder-award-icon {
+            background: linear-gradient(135deg, #f8fafc, #cbd5e1 65%, #64748b);
+        }
+        .nowcoder-award-bronze {
+            color: #d97706;
+            background: rgba(217, 119, 6, 0.12);
+        }
+        .nowcoder-award-bronze .nowcoder-award-icon {
+            background: linear-gradient(135deg, #fdba74, #b45309 65%, #78350f);
+        }
+        .nowcoder-award-iron {
+            color: #94a3b8;
+            background: rgba(148, 163, 184, 0.1);
+        }
+        .nowcoder-award-iron .nowcoder-award-icon {
+            width: 12px;
+            height: 13px;
+            background: linear-gradient(135deg, #cbd5e1, #64748b);
+            clip-path: polygon(50% 0, 92% 18%, 82% 76%, 50% 100%, 18% 76%, 8% 18%);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
         }
         .nowcoder-result-zero {
             color: #ff7675;
@@ -717,7 +837,15 @@
             </div>
         </div>
         <div class="panel">
-            <h2 id="nowcoderSummerSchoolTitle">牛客暑期多校</h2>
+            <h2 class="multi-school-title">
+                <span id="nowcoderSummerSchoolTitle">牛客暑期多校</span>
+                <span class="multi-school-award-legend" aria-label="奖项图例">
+                    <span class="nowcoder-result-rank nowcoder-award-gold" title="金奖"><span class="nowcoder-award-icon"></span><span>金</span></span>
+                    <span class="nowcoder-result-rank nowcoder-award-silver" title="银奖"><span class="nowcoder-award-icon"></span><span>银</span></span>
+                    <span class="nowcoder-result-rank nowcoder-award-bronze" title="铜奖"><span class="nowcoder-award-icon"></span><span>铜</span></span>
+                    <span class="nowcoder-result-rank nowcoder-award-iron" title="铁奖"><span class="nowcoder-award-icon"></span><span>铁</span></span>
+                </span>
+            </h2>
             <div class="admin-only nowcoder-bind-panel" id="nowcoderContestBindPanel" style="display: none;">
                 <div class="nowcoder-bind-row">
                     <div class="nowcoder-contest-bindings" id="nowcoderContestBindings"></div>
@@ -728,7 +856,15 @@
             </div>
         </div>
         <div class="panel">
-            <h2 id="hduMultiSchoolTitle">杭电多校</h2>
+            <h2 class="multi-school-title">
+                <span id="hduMultiSchoolTitle">杭电多校</span>
+                <span class="multi-school-award-legend" aria-label="奖项图例">
+                    <span class="nowcoder-result-rank nowcoder-award-gold" title="金奖"><span class="nowcoder-award-icon"></span><span>金</span></span>
+                    <span class="nowcoder-result-rank nowcoder-award-silver" title="银奖"><span class="nowcoder-award-icon"></span><span>银</span></span>
+                    <span class="nowcoder-result-rank nowcoder-award-bronze" title="铜奖"><span class="nowcoder-award-icon"></span><span>铜</span></span>
+                    <span class="nowcoder-result-rank nowcoder-award-iron" title="铁奖"><span class="nowcoder-award-icon"></span><span>铁</span></span>
+                </span>
+            </h2>
             <div class="admin-only nowcoder-bind-panel" id="hduContestBindPanel" style="display: none;">
                 <div class="nowcoder-bind-row">
                     <div class="nowcoder-contest-bindings" id="hduContestBindings"></div>
@@ -1592,6 +1728,19 @@
             const displayValue = value => (
                 value === undefined || value === null || value === '' ? '-' : escapeHtml(value)
             );
+            const renderResultValue = (resultValue, columnKey) => {
+                const isEmptyResult = resultValue === undefined || resultValue === null || resultValue === '';
+                const isZeroResult = Number(resultValue) === 0 && !isEmptyResult;
+                let resultClass = 'nowcoder-team-placeholder';
+                if (!isEmptyResult) {
+                    resultClass = `nowcoder-result-value ${
+                        isZeroResult
+                            ? 'nowcoder-result-zero'
+                            : (columnKey === 'upsolve' ? 'nowcoder-result-upsolve' : 'nowcoder-result-live')
+                    }`;
+                }
+                return `<span class="${resultClass}">${displayValue(resultValue)}</span>`;
+            };
             const titleEl = document.getElementById(options.titleId);
             const schoolData = options.schoolData || {};
             if (titleEl) titleEl.innerText = schoolData.title || options.defaultTitle;
@@ -1663,23 +1812,30 @@
                     contests.forEach(contest => {
                         const contestKey = String(typeof contest === 'object' ? contest.key : contest);
                         const value = team.results && team.results[contestKey];
-                        resultColumns.forEach((column, columnIndex) => {
+                        const valuesHtml = resultColumns.map((column, columnIndex) => {
                             const columnKey = column.key || '';
                             const resultValue = value && typeof value === 'object'
                                 ? value[columnKey]
                                 : (columnIndex === 0 ? value : '');
-                            const isEmptyResult = resultValue === undefined || resultValue === null || resultValue === '';
-                            const isZeroResult = Number(resultValue) === 0 && !isEmptyResult;
-                            let resultClass = 'nowcoder-team-placeholder';
-                            if (!isEmptyResult) {
-                                resultClass = `nowcoder-result-value ${
-                                    isZeroResult
-                                        ? 'nowcoder-result-zero'
-                                        : (columnKey === 'upsolve' ? 'nowcoder-result-upsolve' : 'nowcoder-result-live')
-                                }`;
-                            }
-                            html += `<td class="nowcoder-result-col"><span class="${resultClass}">${displayValue(resultValue)}</span></td>`;
-                        });
+                            return `<div>${renderResultValue(resultValue, columnKey)}</div>`;
+                        }).join('');
+                        const rankValue = value && typeof value === 'object'
+                            ? (value.rank ?? value.ranking ?? '')
+                            : '';
+                        const award = value && typeof value === 'object' && ['gold', 'silver', 'bronze', 'iron'].includes(value.award)
+                            ? value.award
+                            : '';
+                        const awardLabel = value && typeof value === 'object'
+                            ? (value.award_label || '')
+                            : '';
+                        const awardTitle = awardLabel ? `${awardLabel}奖` : '';
+                        const awardIcon = award
+                            ? `<span class="nowcoder-award-icon" title="${displayValue(awardTitle)}" aria-label="${displayValue(awardTitle)}"></span>`
+                            : '';
+                        const rankHtml = rankValue === undefined || rankValue === null || rankValue === ''
+                            ? ''
+                            : `<div class="nowcoder-result-rank${award ? ` nowcoder-award-${award}` : ''}">${awardIcon}<span>${displayValue(rankValue)}</span></div>`;
+                        html += `<td class="nowcoder-result-group-col" colspan="${resultColumns.length}"><div class="nowcoder-result-group"><div class="nowcoder-result-values" style="grid-template-columns: repeat(${resultColumns.length}, minmax(0, 1fr));">${valuesHtml}</div>${rankHtml}</div></td>`;
                     });
                     html += '</tr>';
                 });

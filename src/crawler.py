@@ -360,18 +360,11 @@ def get_nowcoder_ac(contest_id, user_id):
     return len(accepted)
 
 
-def get_nowcoder_team_rank_data(contest_id, search_user_name="云南大学"):
+def get_nowcoder_team_rank_payload(contest_id, search_user_name="云南大学"):
     if not contest_id:
-        return []
+        return {"rank_data": [], "rank_count": 0}
 
     url = "https://ac.nowcoder.com/acm-heavy/acm/contest/real-time-rank-data"
-    params = {
-        "token": "",
-        "id": str(contest_id),
-        "searchUserName": search_user_name,
-        "limit": "0",
-        "_": str(int(time.time() * 1000)),
-    }
     headers = {
         "User-Agent": (
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -380,30 +373,51 @@ def get_nowcoder_team_rank_data(contest_id, search_user_name="云南大学"):
         "Referer": f"https://ac.nowcoder.com/acm/contest/{contest_id}",
     }
 
-    try:
+    def fetch_rank(search_name):
+        params = {
+            "token": "",
+            "id": str(contest_id),
+            "searchUserName": search_name,
+            "limit": "0",
+            "_": str(int(time.time() * 1000)),
+        }
         response = requests.get(url, params=params, headers=headers, timeout=15)
         response.raise_for_status()
         payload = response.json()
         if payload.get("code") != 0:
-            logger.error(f"error fetching nowcoder team rank for {contest_id}: {payload}")
-            return []
+            raise ValueError(payload)
 
         data = payload.get("data") or {}
         rank_data = data.get("rankData") or []
-        return rank_data if isinstance(rank_data, list) else []
+        basic_info = data.get("basicInfo") or {}
+        return {
+            "rank_data": rank_data if isinstance(rank_data, list) else [],
+            "rank_count": int(basic_info.get("rankCount") or 0),
+        }
+
+    try:
+        result = fetch_rank(search_user_name)
+        if search_user_name:
+            total_result = fetch_rank("")
+            result["rank_count"] = total_result.get("rank_count") or result["rank_count"]
+        return result
     except Exception as e:
         logger.error(f"error fetching nowcoder team rank for {contest_id}: {e}")
-        return []
+        return {"rank_data": [], "rank_count": 0}
 
 
-def get_hdu_team_rank_data(
+def get_nowcoder_team_rank_data(contest_id, search_user_name="云南大学"):
+    return get_nowcoder_team_rank_payload(contest_id, search_user_name)["rank_data"]
+
+
+def get_hdu_team_rank_payload(
     contest_id,
     search="云南大学",
     username="guest",
     password="guest",
 ):
     if not contest_id:
-        return []
+        return {"rank_data": [], "rank_count": 0}
 
     session = requests.Session()
     headers = {
@@ -416,30 +430,20 @@ def get_hdu_team_rank_data(
     login_url = f"https://acm.hdu.edu.cn/contest/login?cid={contest_id}"
     rank_url = "https://acm.hdu.edu.cn/contest/rank"
 
-    try:
-        session.get(login_url, headers=headers, timeout=15)
-        login_response = session.post(
-            login_url,
-            data={"username": username, "password": password},
-            headers={**headers, "Referer": login_url},
-            timeout=15,
-            allow_redirects=True,
-        )
-        login_response.raise_for_status()
-
+    def fetch_rank_page(params):
         response = session.get(
             rank_url,
-            params={"cid": contest_id, "group": "all", "search": search},
+            params=params,
             headers={**headers, "Referer": f"https://acm.hdu.edu.cn/contest/problems?cid={contest_id}"},
             timeout=15,
         )
         response.raise_for_status()
         response.encoding = "utf-8"
         if "/contest/login" in response.url:
-            logger.error(f"error fetching HDU team rank for {contest_id}: login required")
-            return []
+            raise ValueError("login required")
+        return BeautifulSoup(response.text, "html.parser")
 
-        soup = BeautifulSoup(response.text, "html.parser")
+    def parse_rank_rows(soup):
         rank_data = []
         for row in soup.select("tr.page-card-row"):
             cols = row.find_all("td")
@@ -456,6 +460,8 @@ def get_hdu_team_rank_data(
 
             solved_text = cols[2].get_text(strip=True)
             solved_match = re.search(r"\d+", solved_text)
+            rank_text = cols[0].get_text(strip=True)
+            rank_match = re.search(r"\d+", rank_text)
             upsolve_count = sum(
                 1
                 for col in cols[4:]
@@ -465,14 +471,74 @@ def get_hdu_team_rank_data(
                 "username": author_lines[0],
                 "name": author_lines[1] if len(author_lines) > 1 else "",
                 "school": author_lines[2] if len(author_lines) > 2 else "",
+                "rank": int(rank_match.group()) if rank_match else 0,
                 "solved": int(solved_match.group()) if solved_match else 0,
                 "upsolve": upsolve_count,
             })
-
         return rank_data
+
+    def parse_rank_count(soup):
+        page_numbers = [
+            int(text)
+            for text in (
+                node.get_text(" ", strip=True)
+                for node in soup.select("a,button")
+            )
+            if text.isdigit()
+        ]
+        last_page = max(page_numbers, default=1)
+        last_page_soup = soup
+        if last_page > 1:
+            last_page_soup = fetch_rank_page({
+                "cid": contest_id,
+                "group": "all",
+                "page": str(last_page),
+            })
+
+        ranks = [
+            row.get("rank", 0)
+            for row in parse_rank_rows(last_page_soup)
+            if row.get("rank")
+        ]
+        return max(ranks, default=0)
+
+    try:
+        session.get(login_url, headers=headers, timeout=15)
+        login_response = session.post(
+            login_url,
+            data={"username": username, "password": password},
+            headers={**headers, "Referer": login_url},
+            timeout=15,
+            allow_redirects=True,
+        )
+        login_response.raise_for_status()
+
+        search_soup = fetch_rank_page({
+            "cid": contest_id,
+            "group": "all",
+            "search": search,
+        })
+        all_soup = fetch_rank_page({
+            "cid": contest_id,
+            "group": "all",
+            "search": "",
+        })
+        return {
+            "rank_data": parse_rank_rows(search_soup),
+            "rank_count": parse_rank_count(all_soup),
+        }
     except Exception as e:
         logger.error(f"error fetching HDU team rank for {contest_id}: {e}")
-        return []
+        return {"rank_data": [], "rank_count": 0}
+
+
+def get_hdu_team_rank_data(
+    contest_id,
+    search="云南大学",
+    username="guest",
+    password="guest",
+):
+    return get_hdu_team_rank_payload(contest_id, search, username, password)["rank_data"]
 
 
 if __name__ == "__main__":

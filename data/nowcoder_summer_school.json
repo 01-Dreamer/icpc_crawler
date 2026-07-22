@@ -15,7 +15,8 @@
     {
       "key": "1",
       "label": "1",
-      "contest_id": "133876"
+      "contest_id": "133876",
+      "rank_total": 1629
     },
     {
       "key": "2",
@@ -74,7 +75,11 @@
       "results": {
         "1": {
           "live": 2,
-          "upsolve": 0
+          "upsolve": 0,
+          "rank": 1198,
+          "rank_total": 1629,
+          "award": "iron",
+          "award_label": "铁"
         },
         "2": {
           "live": "",
@@ -124,7 +129,11 @@
       "results": {
         "1": {
           "live": 5,
-          "upsolve": 1
+          "upsolve": 1,
+          "rank": 274,
+          "rank_total": 1629,
+          "award": "silver",
+          "award_label": "银"
         },
         "2": {
           "live": "",
@@ -174,7 +183,11 @@
       "results": {
         "1": {
           "live": 3,
-          "upsolve": 2
+          "upsolve": 3,
+          "rank": 626,
+          "rank_total": 1629,
+          "award": "bronze",
+          "award_label": "铜"
         },
         "2": {
           "live": "",
@@ -224,7 +237,11 @@
       "results": {
         "1": {
           "live": 3,
-          "upsolve": 0
+          "upsolve": 0,
+          "rank": 975,
+          "rank_total": 1629,
+          "award": "bronze",
+          "award_label": "铜"
         },
         "2": {
           "live": "",
@@ -274,7 +291,11 @@
       "results": {
         "1": {
           "live": 2,
-          "upsolve": 3
+          "upsolve": 3,
+          "rank": 1184,
+          "rank_total": 1629,
+          "award": "iron",
+          "award_label": "铁"
         },
         "2": {
           "live": "",
@@ -324,7 +345,11 @@
       "results": {
         "1": {
           "live": 2,
-          "upsolve": 4
+          "upsolve": 4,
+          "rank": 1269,
+          "rank_total": 1629,
+          "award": "iron",
+          "award_label": "铁"
         },
         "2": {
           "live": "",
