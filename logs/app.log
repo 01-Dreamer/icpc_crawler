@@ -3543,3 +3543,10 @@
 2026-07-21 15:27:58.739 | INFO     | src.routes:index:71 - Main page accessed by IP: 127.0.0.1
 2026-07-22 12:44:51.131 | INFO     | src.routes:index:71 - Main page accessed by IP: 127.0.0.1
 2026-07-22 12:48:53.080 | INFO     | src.routes:index:71 - Main page accessed by IP: 127.0.0.1
+2026-07-22 13:05:29.413 | INFO     | src.routes:index:71 - Main page accessed by IP: 127.0.0.1
+2026-07-22 13:29:17.434 | INFO     | src.routes:index:71 - Main page accessed by IP: 127.0.0.1
+2026-07-22 13:34:16.598 | INFO     | src.routes:index:71 - Main page accessed by IP: 127.0.0.1
+2026-07-22 13:40:16.739 | ERROR    | src.crawler:get_nowcoder_rating:203 - Error getting nowcoder rating for _three (attempt 1): HTTPSConnectionPool(host='ac.nowcoder.com', port=443): Read timed out. (read timeout=10)
+2026-07-22 13:45:15.921 | INFO     | src.routes:index:71 - Main page accessed by IP: 127.0.0.1
+2026-07-22 13:46:45.063 | INFO     | src.routes:index:71 - Main page accessed by IP: 127.0.0.1
+2026-07-22 13:49:22.882 | INFO     | src.routes:index:71 - Main page accessed by IP: 127.0.0.1

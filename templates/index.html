@@ -233,6 +233,39 @@
         a:hover { text-decoration: underline; }
         .action-btns { display: flex; gap: 8px; justify-content: center;}
         .btn-sm { padding: 5px 10px; font-size: 12px;}
+        .xcpc-region-table th,
+        .xcpc-region-table td {
+            padding: 10px 12px;
+        }
+        .xcpc-region-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            white-space: normal;
+        }
+        .xcpc-link-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .xcpc-link-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 52px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            background: rgba(0, 210, 211, 0.12);
+            border: 1px solid rgba(0, 210, 211, 0.25);
+            color: #67e8f9;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .xcpc-link-btn:hover {
+            background: rgba(0, 210, 211, 0.2);
+            text-decoration: none;
+        }
         .load-more-status {
             display: flex;
             align-items: center;
@@ -525,6 +558,162 @@
                 <button class="btn-sm refresh admin-only" id="btn-refresh-upcoming" style="display: none; float: right; margin-top: -5px;" onclick="refreshUpcoming()">🔄 刷新比赛</button>
             </h2>
             <div class="table-responsive" id="upcomingTableContainer">
+            </div>
+        </div>
+        <div class="panel">
+            <h2>XCPC区域赛</h2>
+            <div class="table-responsive">
+                <table class="xcpc-region-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left; min-width: 220px;">比赛名称</th>
+                            <th style="width: 120px;">补题链接</th>
+                            <th style="width: 120px;">外榜</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2024 ICPC 网络赛（I）</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/1794" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://icpc.pku.edu.cn/docs/20240924164622836969.pdf" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2024 ICPC 网络赛（II）</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/1799" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://icpc.pku.edu.cn/docs/20240924164702184075.pdf" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2024 ICPC 成都</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/1821" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/icpc/49th/chengdu" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2024 ICPC 杭州</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/1893" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/icpc/49th/hangzhou" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2024 ICPC 香港</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/1885" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/icpc/49th/hongkong" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2024 ICPC 昆明</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/1871" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/icpc/49th/kunming" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2024 ICPC 南京</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/1828" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/icpc/49th/nanjing" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2024 ICPC 上海</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/1913" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/icpc/49th/shanghai" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2024 ICPC 沈阳</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/1865" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/icpc/49th/shenyang" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2024 CCPC 网络赛</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://vjudge.net/contest/654382" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://rl.algoux.cn/ranklist/ccpc2024preliminary" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2024 CCPC 哈尔滨</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/1817" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/ccpc/10th/harbin" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2024 CCPC 济南</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/1843" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/ccpc/10th/jinan" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2024 CCPC 郑州</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/1873" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/ccpc/10th/zhengzhou" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2024 CCPC 重庆</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/1840" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/ccpc/10th/chongqing" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2025 ICPC 网络赛（I）</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/2513" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://rl.algoux.cn/ranklist/icpc2025preliminary-1" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2025 ICPC 网络赛（II）</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/2524" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://rl.algoux.cn/ranklist/icpc2025preliminary-2" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2025 ICPC 西安</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/2562" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/icpc/50th/xian" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2025 ICPC 成都</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/2567" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/icpc/50th/chengdu" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2025 ICPC 武汉</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/2609" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/icpc/50th/wuhan" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2025 ICPC 南京</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/2581" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/icpc/50th/nanjing" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2025 ICPC 沈阳</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/2641" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/icpc/50th/shenyang" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2025 ICPC 上海</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/2908" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/icpc/50th/shanghai" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2025 ICPC 香港</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/3169" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/icpc/50th/hongkong" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2025 CCPC 网络赛</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/2534" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://rl.algoux.cn/ranklist/ccpc2025preliminary" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2025 CCPC 哈尔滨</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/2575" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/ccpc/11th/harbin" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2025 CCPC 济南</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/2693" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/ccpc/11th/jinan" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2025 CCPC 郑州</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/2661" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/ccpc/11th/zhengzhou" target="_blank">外榜</a></td>
+                        </tr>
+                        <tr>
+                            <td>2025 CCPC 重庆</td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://qoj.ac/contest/3387" target="_blank">补题</a></td>
+                            <td><a class="xcpc-link-btn" rel="noopener noreferrer" referrerpolicy="no-referrer" href="https://board.xcpcio.com/ccpc/11th/chongqing" target="_blank">外榜</a></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
         <div class="panel">

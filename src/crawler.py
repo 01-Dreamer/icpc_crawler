@@ -159,14 +159,18 @@ def get_upcoming_nowcoder_contests(starts_after=None):
 
 
 def get_nowcoder_rating(nickname):
+    if not nickname:
+        return None
+
     url = "https://ac.nowcoder.com/acm/contest/rating-index"
     params = {"searchUserName": nickname}
     headers = {
         "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
         ),
         "Referer": "https://ac.nowcoder.com/acm/contest/rating-index",
+        "Accept-Language": "zh-CN,zh;q=0.9",
     }
     delays = [2, 5, 10]
     for i in range(4):
@@ -174,19 +178,26 @@ def get_nowcoder_rating(nickname):
             response = requests.get(url, params=params, headers=headers, timeout=10)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, "html.parser")
-            rows = soup.find_all("tr")
+            rows = soup.select("table.rating-data tr") or soup.find_all("tr")
             for row in rows:
-                if nickname.lower() in row.text.lower():
-                    cols = row.find_all("td")
-                    if len(cols) >= 3:
-                        rating_text = cols[-1].get_text(strip=True)
-                        match = re.search(r"\d+", rating_text)
-                        if match:
-                            return int(match.group())
+                cols = row.find_all("td")
+                if len(cols) < 5:
+                    continue
 
-            alt_rating = soup.find("span", class_=re.compile("user-rating-rank|rating-score"))
-            if alt_rating:
-                return int(re.search(r"\d+", alt_rating.text).group())
+                username_node = cols[1].find("span", class_=re.compile(r"\brate-score\d*\b"))
+                username_text = (
+                    username_node.get_text(strip=True)
+                    if username_node
+                    else cols[1].get_text(" ", strip=True).split()[0]
+                )
+                if username_text.lower() != str(nickname).strip().lower():
+                    continue
+
+                rating_text = cols[-1].get_text(strip=True)
+                match = re.search(r"\d+", rating_text)
+                if match:
+                    return int(match.group())
+
             return None
         except Exception as e:
             logger.error(f"Error getting nowcoder rating for {nickname} (attempt {i + 1}): {e}")
