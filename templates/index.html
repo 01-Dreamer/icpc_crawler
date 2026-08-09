@@ -688,7 +688,7 @@
                         <tr>
                             <th style="text-align: left; min-width: 220px;">比赛名称</th>
                             <th style="width: 120px;">补题链接</th>
-                            <th style="width: 120px;">外榜</th>
+                            <th style="width: 120px;">外榜链接</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1004,7 +1004,7 @@
             const container = document.getElementById('authContainer');
             if (isAdmin) {
                 container.innerHTML = `
-                    <span style="color: #6c5ce7; font-weight: bold; background: white; padding: 5px 10px; border-radius: 6px;">Admin Mode</span>
+                    <span style="color: #6c5ce7; font-weight: bold; background: white; padding: 5px 10px; border-radius: 6px;">管理员模式</span>
                     <button class="btn-sm danger" onclick="logout()">退出</button>
                 `;
             } else {
