@@ -1186,11 +1186,16 @@
             const time = document.getElementById('contestTime').value;
             const link = document.getElementById('contestLink').value.trim();
             if (!cid || !name) return alert("ID和名称必填");
-            await fetch('/api/contests', {
+            const res = await fetch('/api/contests', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ platform: platform, contest_id: cid, name: name, time: time, link: link })
             });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                alert(data.error || '添加失败');
+                return;
+            }
             document.getElementById('contestId').value = '';
             document.getElementById('contestName').value = '';
             document.getElementById('contestTime').value = '';
@@ -1656,7 +1661,7 @@
             }
             html += '</tr></thead><tbody>';
             
-            globalUpcoming.forEach(c => {
+            globalUpcoming.forEach((c, index) => {
                 let actionHtml = '';
                 if (isAdmin) {
                     const contestKeys = globalContestKeys.length ? globalContestKeys : globalContests;
@@ -1667,8 +1672,7 @@
                     if (isAdded) {
                         actionHtml = `<td><span style="color: #64748b; font-size: 13px;">已添加</span></td>`;
                     } else {
-                        const cJson = JSON.stringify(c).replace(/"/g, '&quot;');
-                        actionHtml = `<td><button class="btn-sm" style="background:#6c5ce7;" onclick="addUpcomingContest('${cJson}')">添加</button></td>`;
+                        actionHtml = `<td><button class="btn-sm upcoming-add-btn" style="background:#6c5ce7;" data-upcoming-index="${index}">添加</button></td>`;
                     }
                 }
                 
@@ -2002,9 +2006,13 @@
             renderHduMultiSchool();
         }
 
-        async function addUpcomingContest(cJsonStr) {
+        async function addUpcomingContest(upcomingIndex) {
             try {
-                const c = JSON.parse(cJsonStr);
+                const c = globalUpcoming[Number(upcomingIndex)];
+                if (!c) {
+                    alert('比赛数据不存在，请刷新近期比赛后重试');
+                    return;
+                }
                 const res = await fetch('/api/contests', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -2017,7 +2025,7 @@
                     })
                 });
                 
-                const returnData = await res.json();
+                const returnData = await res.json().catch(() => ({}));
                 if (!res.ok) {
                     alert(returnData.error || '添加失败');
                 } else {
@@ -2027,6 +2035,12 @@
                 console.error(e);
             }
         }
+
+        document.addEventListener('click', event => {
+            const addButton = event.target.closest('.upcoming-add-btn');
+            if (!addButton) return;
+            addUpcomingContest(addButton.dataset.upcomingIndex);
+        });
 
         window.addEventListener('scroll', handleContestInfiniteScroll, { passive: true });
         window.addEventListener('resize', handleContestInfiniteScroll);
