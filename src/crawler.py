@@ -462,9 +462,22 @@ def get_hdu_team_rank_payload(
             solved_match = re.search(r"\d+", solved_text)
             rank_text = cols[0].get_text(strip=True)
             rank_match = re.search(r"\d+", rank_text)
+            problem_cells = cols[4:]
+            attended = any(
+                any(
+                    status_class in (col.get("class") or [])
+                    for status_class in (
+                        "rank-status-accepted",
+                        "rank-status-trying",
+                        "rank-status-solved",
+                        "rank-status-pending",
+                    )
+                )
+                for col in problem_cells
+            )
             upsolve_count = sum(
                 1
-                for col in cols[4:]
+                for col in problem_cells
                 if "rank-status-solved" in (col.get("class") or [])
             )
             rank_data.append({
@@ -474,6 +487,7 @@ def get_hdu_team_rank_payload(
                 "rank": int(rank_match.group()) if rank_match else 0,
                 "solved": int(solved_match.group()) if solved_match else 0,
                 "upsolve": upsolve_count,
+                "attended": attended,
             })
         return rank_data
 

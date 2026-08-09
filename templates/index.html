@@ -977,6 +977,26 @@
                 updateAuthUI();
             } catch (e) { console.error(e); }
         }
+        function reportHumanVisit() {
+            if (navigator.webdriver) return;
+            const payload = {
+                language: navigator.language || '',
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+                screen_width: window.screen ? window.screen.width : 0,
+                screen_height: window.screen ? window.screen.height : 0,
+                device_pixel_ratio: window.devicePixelRatio || 1,
+                max_touch_points: navigator.maxTouchPoints || 0,
+                webdriver: Boolean(navigator.webdriver)
+            };
+            setTimeout(() => {
+                fetch('/api/visit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    keepalive: true
+                }).catch(() => {});
+            }, 1200);
+        }
         async function login() {
             const username = document.getElementById('loginUser').value;
             const password = document.getElementById('loginPass').value;
@@ -2010,7 +2030,10 @@
 
         window.addEventListener('scroll', handleContestInfiniteScroll, { passive: true });
         window.addEventListener('resize', handleContestInfiniteScroll);
-        checkAuth().then(loadData);
+        checkAuth().then(() => {
+            reportHumanVisit();
+            loadData();
+        });
     </script>
 </body>
 </html>

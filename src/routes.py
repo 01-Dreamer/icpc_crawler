@@ -1,4 +1,4 @@
-import uuid
+import re
 from datetime import datetime
 from functools import wraps
 
@@ -49,11 +49,47 @@ from .services import (
 
 routes = Blueprint("routes", __name__)
 
+_BOT_USER_AGENT_PATTERN = re.compile(
+    r"bot|crawler|spider|slurp|baiduspider|bingbot|googlebot|yandex|"
+    r"duckduckbot|semrush|ahrefs|dotbot|bytespider|petalbot|"
+    r"facebookexternalhit|python-requests|curl|wget|go-http-client|"
+    r"java|okhttp|node-fetch|axios|headless|phantom|selenium|playwright",
+    re.IGNORECASE,
+)
+
 
 def get_client_ip():
     if request.headers.get("X-Forwarded-For"):
         return request.headers.get("X-Forwarded-For").split(",")[0].strip()
     return request.remote_addr
+
+
+def _is_likely_human_visit(payload):
+    user_agent = request.headers.get("User-Agent", "")
+    if not user_agent or _BOT_USER_AGENT_PATTERN.search(user_agent):
+        return False
+
+    if payload.get("webdriver"):
+        return False
+
+    sec_fetch_site = request.headers.get("Sec-Fetch-Site", "")
+    if sec_fetch_site and sec_fetch_site not in {"same-origin", "none"}:
+        return False
+
+    sec_fetch_mode = request.headers.get("Sec-Fetch-Mode", "")
+    if sec_fetch_mode and sec_fetch_mode not in {"cors", "same-origin"}:
+        return False
+
+    language = str(payload.get("language") or "").strip()
+    timezone = str(payload.get("timezone") or "").strip()
+    screen_width = int(payload.get("screen_width") or 0)
+    screen_height = int(payload.get("screen_height") or 0)
+    if not language or not timezone:
+        return False
+    if screen_width < 300 or screen_height < 300:
+        return False
+
+    return True
 
 
 def require_auth(f):
@@ -68,8 +104,19 @@ def require_auth(f):
 
 @routes.route("/")
 def index():
-    logger.info(f"Main page accessed by IP: {get_client_ip()}")
     return render_template("index.html")
+
+
+@routes.route("/api/visit", methods=["POST"])
+def record_visit():
+    payload = request.json or {}
+    if not _is_likely_human_visit(payload):
+        return jsonify({"status": "ignored"})
+
+    ip = get_client_ip()
+    logger.info(f"Human page viewed by IP: {ip}")
+
+    return jsonify({"status": "ok"})
 
 
 @routes.route("/api/login", methods=["POST"])

@@ -214,6 +214,29 @@ def _rank_award(rank, total):
     return {}
 
 
+def _parse_rank_int(value):
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _empty_multi_school_result():
+    return {"live": "", "upsolve": ""}
+
+
+def _nowcoder_unranked_award_result(rank_total):
+    rank_total = _parse_rank_int(rank_total)
+    if rank_total <= 0:
+        return {}
+    return {
+        "rank": rank_total,
+        "rank_total": rank_total,
+        "award": "iron",
+        "award_label": "铁",
+    }
+
+
 def _nowcoder_rank_result(rank_item, rank_total=0):
     score_list = rank_item.get("scoreList") or []
     upsolve_count = sum(
@@ -221,14 +244,33 @@ def _nowcoder_rank_result(rank_item, rank_total=0):
         for score in score_list
         if isinstance(score, dict) and score.get("postContestAccepted")
     )
-    rank = int(rank_item.get("ranking") or 0)
+    live_count = int(rank_item.get("acceptedCount") or 0)
+    attended = live_count > 0 or any(
+        isinstance(score, dict)
+        and (
+            score.get("submit")
+            or score.get("accepted")
+            or score.get("postContestAccepted")
+            or _parse_rank_int(score.get("failedCount")) > 0
+            or _parse_rank_int(score.get("waitingJudgeCount")) > 0
+        )
+        for score in score_list
+    )
+    if not attended:
+        return _empty_multi_school_result()
+
+    rank = _parse_rank_int(rank_item.get("ranking"))
     result = {
-        "live": int(rank_item.get("acceptedCount") or 0),
+        "live": live_count,
         "upsolve": upsolve_count,
         "rank": rank,
         "rank_total": int(rank_total or 0),
+        "attended": True,
     }
-    result.update(_rank_award(rank, rank_total))
+    if rank <= 0 and rank_total:
+        result.update(_nowcoder_unranked_award_result(rank_total))
+    else:
+        result.update(_rank_award(rank, rank_total))
     return result
 
 
@@ -237,12 +279,16 @@ def _hdu_team_username_key(username):
 
 
 def _hdu_rank_result(rank_item, rank_total=0):
+    if not rank_item.get("attended"):
+        return _empty_multi_school_result()
+
     rank = int(rank_item.get("rank") or 0)
     result = {
         "live": int(rank_item.get("solved") or 0),
         "upsolve": int(rank_item.get("upsolve") or 0),
         "rank": rank,
         "rank_total": int(rank_total or 0),
+        "attended": True,
     }
     result.update(_rank_award(rank, rank_total))
     return result
@@ -304,6 +350,28 @@ def _normalize_nowcoder_summer_school_data(data):
 
     teams = data.get("teams")
     data["teams"] = teams if isinstance(teams, list) else []
+    for team in data["teams"]:
+        if not isinstance(team, dict):
+            continue
+
+        results = team.get("results")
+        if not isinstance(results, dict):
+            continue
+
+        for value in results.values():
+            if not isinstance(value, dict):
+                continue
+
+            rank_total = _parse_rank_int(value.get("rank_total"))
+            rank = _parse_rank_int(value.get("rank"))
+            if rank <= 0 and rank_total > 0:
+                live = _parse_rank_int(value.get("live"))
+                upsolve = _parse_rank_int(value.get("upsolve"))
+                if value.get("attended") or live > 0 or upsolve > 0:
+                    value.update(_nowcoder_unranked_award_result(rank_total))
+                else:
+                    value.clear()
+                    value.update(_empty_multi_school_result())
     return data
 
 
@@ -444,10 +512,12 @@ def refresh_nowcoder_summer_school_contest(contest_key):
         for team in data.get("teams", []):
             team_key = _nowcoder_team_name_key(team.get("name"))
             rank_item = rank_by_team.get(team_key)
+            results = team.setdefault("results", {})
             if not rank_item:
+                if rank_data or rank_total:
+                    results[contest_key] = _empty_multi_school_result()
                 continue
 
-            results = team.setdefault("results", {})
             results[contest_key] = _nowcoder_rank_result(rank_item, rank_total)
             updated += 1
 
@@ -516,10 +586,12 @@ def refresh_hdu_multi_school_contest(contest_key):
         for team in data.get("teams", []):
             team_key = _hdu_team_username_key(team.get("username"))
             rank_item = rank_by_username.get(team_key)
+            results = team.setdefault("results", {})
             if not rank_item:
+                if rank_data or rank_total:
+                    results[contest_key] = _empty_multi_school_result()
                 continue
 
-            results = team.setdefault("results", {})
             results[contest_key] = _hdu_rank_result(rank_item, rank_total)
             updated += 1
 

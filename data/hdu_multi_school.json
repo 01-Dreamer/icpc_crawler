@@ -34,40 +34,25 @@
           "upsolve": 0,
           "rank": 437,
           "rank_total": 1080,
+          "attended": true,
           "award": "bronze",
           "award_label": "铜"
         },
         "3": {
-          "live": 0,
-          "upsolve": 0,
-          "rank": 934,
-          "rank_total": 1080,
-          "award": "iron",
-          "award_label": "铁"
+          "live": "",
+          "upsolve": ""
         },
         "4": {
-          "live": 0,
-          "upsolve": 0,
-          "rank": 933,
-          "rank_total": 1080,
-          "award": "iron",
-          "award_label": "铁"
+          "live": "",
+          "upsolve": ""
         },
         "5": {
-          "live": 0,
-          "upsolve": 0,
-          "rank": 940,
-          "rank_total": 1080,
-          "award": "iron",
-          "award_label": "铁"
+          "live": "",
+          "upsolve": ""
         },
         "6": {
-          "live": 0,
-          "upsolve": 0,
-          "rank": 924,
-          "rank_total": 1080,
-          "award": "iron",
-          "award_label": "铁"
+          "live": "",
+          "upsolve": ""
         },
         "7": {
           "live": "",
@@ -110,6 +95,7 @@
           "upsolve": 1,
           "rank": 522,
           "rank_total": 1080,
+          "attended": true,
           "award": "bronze",
           "award_label": "铜"
         },
@@ -118,22 +104,20 @@
           "upsolve": 0,
           "rank": 935,
           "rank_total": 1080,
+          "attended": true,
           "award": "iron",
           "award_label": "铁"
         },
         "4": {
-          "live": 0,
-          "upsolve": 0,
-          "rank": 934,
-          "rank_total": 1080,
-          "award": "iron",
-          "award_label": "铁"
+          "live": "",
+          "upsolve": ""
         },
         "5": {
           "live": 1,
           "upsolve": 0,
           "rank": 679,
           "rank_total": 1080,
+          "attended": true,
           "award": "iron",
           "award_label": "铁"
         },
@@ -142,6 +126,7 @@
           "upsolve": 1,
           "rank": 652,
           "rank_total": 1080,
+          "attended": true,
           "award": "iron",
           "award_label": "铁"
         },
@@ -182,42 +167,27 @@
           "award_label": "铁"
         },
         "2": {
-          "live": 0,
-          "upsolve": 0,
-          "rank": 922,
-          "rank_total": 1080,
-          "award": "iron",
-          "award_label": "铁"
+          "live": "",
+          "upsolve": ""
         },
         "3": {
-          "live": 0,
-          "upsolve": 0,
-          "rank": 936,
-          "rank_total": 1080,
-          "award": "iron",
-          "award_label": "铁"
+          "live": "",
+          "upsolve": ""
         },
         "4": {
-          "live": 0,
-          "upsolve": 0,
-          "rank": 935,
-          "rank_total": 1080,
-          "award": "iron",
-          "award_label": "铁"
+          "live": "",
+          "upsolve": ""
         },
         "5": {
-          "live": 0,
-          "upsolve": 0,
-          "rank": 941,
-          "rank_total": 1080,
-          "award": "iron",
-          "award_label": "铁"
+          "live": "",
+          "upsolve": ""
         },
         "6": {
           "live": 1,
           "upsolve": 0,
           "rank": 698,
           "rank_total": 1080,
+          "attended": true,
           "award": "iron",
           "award_label": "铁"
         },
@@ -262,6 +232,7 @@
           "upsolve": 0,
           "rank": 658,
           "rank_total": 1080,
+          "attended": true,
           "award": "iron",
           "award_label": "铁"
         },
@@ -270,22 +241,20 @@
           "upsolve": 0,
           "rank": 600,
           "rank_total": 1080,
+          "attended": true,
           "award": "bronze",
           "award_label": "铜"
         },
         "4": {
-          "live": 0,
-          "upsolve": 0,
-          "rank": 936,
-          "rank_total": 1080,
-          "award": "iron",
-          "award_label": "铁"
+          "live": "",
+          "upsolve": ""
         },
         "5": {
           "live": 2,
           "upsolve": 0,
           "rank": 537,
           "rank_total": 1080,
+          "attended": true,
           "award": "bronze",
           "award_label": "铜"
         },
@@ -294,6 +263,7 @@
           "upsolve": 0,
           "rank": 651,
           "rank_total": 1080,
+          "attended": true,
           "award": "iron",
           "award_label": "铁"
         },
@@ -334,18 +304,15 @@
           "award_label": "铜"
         },
         "2": {
-          "live": 0,
-          "upsolve": 0,
-          "rank": 923,
-          "rank_total": 1080,
-          "award": "iron",
-          "award_label": "铁"
+          "live": "",
+          "upsolve": ""
         },
         "3": {
           "live": 2,
           "upsolve": 2,
           "rank": 597,
           "rank_total": 1080,
+          "attended": true,
           "award": "bronze",
           "award_label": "铜"
         },
@@ -354,6 +321,7 @@
           "upsolve": 0,
           "rank": 517,
           "rank_total": 1080,
+          "attended": true,
           "award": "bronze",
           "award_label": "铜"
         },
@@ -362,6 +330,7 @@
           "upsolve": 0,
           "rank": 687,
           "rank_total": 1080,
+          "attended": true,
           "award": "iron",
           "award_label": "铁"
         },
@@ -370,6 +339,7 @@
           "upsolve": 0,
           "rank": 514,
           "rank_total": 1080,
+          "attended": true,
           "award": "bronze",
           "award_label": "铜"
         },
