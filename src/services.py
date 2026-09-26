@@ -1,21 +1,19 @@
-import json
-import math
 import threading
 import time
 from datetime import datetime, timedelta
 
 from loguru import logger
 
-from .config import HDU_MULTI_SCHOOL_FILE, NOWCODER_SUMMER_SCHOOL_FILE
 from .crawler import (
-    get_atcoder_ac,
+    get_atcoder_ac_breakdown,
+    get_atcoder_contest_info,
     get_atcoder_rating,
-    get_codeforces_ac,
+    get_codeforces_ac_breakdown,
+    get_codeforces_contest_info,
     get_codeforces_rating,
-    get_hdu_team_rank_payload,
-    get_nowcoder_ac,
+    get_nowcoder_ac_breakdown,
+    get_nowcoder_contest_info,
     get_nowcoder_rating,
-    get_nowcoder_team_rank_payload,
     get_upcoming_atcoder_contests,
     get_upcoming_codeforces_contests,
     get_upcoming_nowcoder_contests,
@@ -32,6 +30,7 @@ from .database import (
     save_ratings,
     save_upcoming,
     save_user_rating,
+    update_contest_metadata,
 )
 
 
@@ -40,128 +39,6 @@ class ContestRefreshAlreadyRunning(Exception):
 
 
 _CONTEST_REFRESH_LOCK = threading.Lock()
-_NOWCODER_SUMMER_SCHOOL_LOCK = threading.RLock()
-_HDU_MULTI_SCHOOL_LOCK = threading.RLock()
-
-
-_NOWCODER_SUMMER_SCHOOL_DEFAULT = {
-    "title": "牛客暑期多校",
-    "contest_count": 10,
-    "result_columns": [
-        {"key": "live", "label": "赛时"},
-        {"key": "upsolve", "label": "补题"},
-    ],
-    "teams": [
-        {
-            "name": "教练说不拿金牌就延毕",
-            "members": ["李健阳", "吴一航", "王毅豪"],
-        },
-        {
-            "name": "海绵宝宝抓派大星抓章鱼哥抓水母",
-            "members": ["张祖翊", "姜凡", "何毅"],
-        },
-        {
-            "name": "如果你是大二，我还是推荐你打ACM",
-            "members": ["王宜禾", "熊厚廣", "王开谚"],
-        },
-        {
-            "name": "我的刀队",
-            "members": ["吴吁柬", "樊奕洋", "苏弈宁"],
-        },
-        {
-            "name": "\\u200e",
-            "members": ["邹弘辉", "房元首", "卢永轩"],
-        },
-        {
-            "name": "纵acm出题十万必嚼碎吞之",
-            "members": ["蔡浩然", "朱鹭", "韩一铭"],
-        },
-    ],
-}
-
-
-_HDU_MULTI_SCHOOL_DEFAULT = {
-    "title": "杭电多校",
-    "contest_count": 10,
-    "result_columns": [
-        {"key": "live", "label": "赛时"},
-        {"key": "upsolve", "label": "补题"},
-    ],
-    "teams": [
-        {
-            "username": "team0723",
-            "name": "教练说不拿金牌就延毕",
-            "school": "云南大学",
-            "members": ["李健阳", "吴一航", "王毅豪"],
-        },
-        {
-            "username": "team0724",
-            "name": "/u200e",
-            "school": "云南大学",
-            "members": ["邹弘辉", "房元首", "卢永轩"],
-        },
-        {
-            "username": "team0725",
-            "name": "我的刀队",
-            "school": "云南大学",
-            "members": ["吴吁柬", "樊奕洋", "苏弈宁"],
-        },
-        {
-            "username": "team0726",
-            "name": "啊对对队",
-            "school": "云南大学",
-            "members": ["蔡浩然", "朱鹭", "韩一铭"],
-        },
-        {
-            "username": "team0727",
-            "name": "我现在的要求是男娃来男娃去",
-            "school": "云南大学",
-            "members": ["王宜禾", "熊厚廣", "王开谚"],
-        },
-    ],
-}
-
-
-def _default_nowcoder_summer_school_data():
-    data = json.loads(json.dumps(_NOWCODER_SUMMER_SCHOOL_DEFAULT, ensure_ascii=False))
-    contest_count = int(data.get("contest_count") or 10)
-    result_columns = data.get("result_columns") or []
-    data["contests"] = [
-        {"key": str(index), "label": str(index), "contest_id": ""}
-        for index in range(1, contest_count + 1)
-    ]
-
-    for team in data.get("teams", []):
-        team["results"] = {
-            str(index): {
-                column.get("key", ""): ""
-                for column in result_columns
-                if column.get("key")
-            }
-            for index in range(1, contest_count + 1)
-        }
-    return data
-
-
-def _default_hdu_multi_school_data():
-    data = json.loads(json.dumps(_HDU_MULTI_SCHOOL_DEFAULT, ensure_ascii=False))
-    contest_count = int(data.get("contest_count") or 10)
-    result_columns = data.get("result_columns") or []
-    data["contests"] = [
-        {"key": str(index), "label": str(index), "contest_id": ""}
-        for index in range(1, contest_count + 1)
-    ]
-
-    for team in data.get("teams", []):
-        team["results"] = {
-            str(index): {
-                column.get("key", ""): ""
-                for column in result_columns
-                if column.get("key")
-            }
-            for index in range(1, contest_count + 1)
-        }
-    return data
 
 
 def _parse_contest_time(time_str):
@@ -184,445 +61,25 @@ def _contest_has_started(contest, now=None):
     return contest_time <= (now or datetime.now())
 
 
-def _nowcoder_team_name_key(name):
-    return str(name or "").strip().replace("/", "\\").lower()
+def _contest_end_timestamp(contest):
+    end_time = _parse_contest_time(contest.get("end_time"))
+    if end_time is None:
+        return None
+    return int(end_time.timestamp())
 
 
-def _rank_award(rank, total):
-    try:
-        rank = int(rank or 0)
-        total = int(total or 0)
-    except (TypeError, ValueError):
-        return {}
-
-    if rank <= 0 or total <= 0:
-        return {}
-
-    gold_count = math.ceil(total * 0.1)
-    silver_count = math.ceil(total * 0.2)
-    bronze_count = math.ceil(total * 0.3)
-    iron_count = math.ceil(total * 0.4)
-
-    if rank <= gold_count:
-        return {"award": "gold", "award_label": "金"}
-    if rank <= gold_count + silver_count:
-        return {"award": "silver", "award_label": "银"}
-    if rank <= gold_count + silver_count + bronze_count:
-        return {"award": "bronze", "award_label": "铜"}
-    if rank <= gold_count + silver_count + bronze_count + iron_count:
-        return {"award": "iron", "award_label": "铁"}
+def _get_platform_contest_info(platform, contest_id):
+    if platform == "codeforces":
+        return get_codeforces_contest_info(contest_id)
+    if platform == "atcoder":
+        return get_atcoder_contest_info(contest_id)
+    if platform in ("nowcoder", "cowcoder", "牛客"):
+        return get_nowcoder_contest_info(contest_id)
     return {}
-
-
-def _parse_rank_int(value):
-    try:
-        return int(value or 0)
-    except (TypeError, ValueError):
-        return 0
-
-
-def _empty_multi_school_result():
-    return {"live": "", "upsolve": ""}
-
-
-def _nowcoder_unranked_award_result(rank_total):
-    rank_total = _parse_rank_int(rank_total)
-    if rank_total <= 0:
-        return {}
-    return {
-        "rank": rank_total,
-        "rank_total": rank_total,
-        "award": "iron",
-        "award_label": "铁",
-    }
-
-
-def _nowcoder_rank_result(rank_item, rank_total=0):
-    score_list = rank_item.get("scoreList") or []
-    upsolve_count = sum(
-        1
-        for score in score_list
-        if isinstance(score, dict) and score.get("postContestAccepted")
-    )
-    live_count = int(rank_item.get("acceptedCount") or 0)
-    attended = live_count > 0 or any(
-        isinstance(score, dict)
-        and (
-            score.get("submit")
-            or score.get("accepted")
-            or score.get("postContestAccepted")
-            or _parse_rank_int(score.get("failedCount")) > 0
-            or _parse_rank_int(score.get("waitingJudgeCount")) > 0
-        )
-        for score in score_list
-    )
-    if not attended:
-        return _empty_multi_school_result()
-
-    rank = _parse_rank_int(rank_item.get("ranking"))
-    result = {
-        "live": live_count,
-        "upsolve": upsolve_count,
-        "rank": rank,
-        "rank_total": int(rank_total or 0),
-        "attended": True,
-    }
-    if rank <= 0 and rank_total:
-        result.update(_nowcoder_unranked_award_result(rank_total))
-    else:
-        result.update(_rank_award(rank, rank_total))
-    return result
-
-
-def _hdu_team_username_key(username):
-    return str(username or "").strip().lower()
-
-
-def _hdu_rank_result(rank_item, rank_total=0):
-    if not rank_item.get("attended"):
-        return _empty_multi_school_result()
-
-    rank = int(rank_item.get("rank") or 0)
-    result = {
-        "live": int(rank_item.get("solved") or 0),
-        "upsolve": int(rank_item.get("upsolve") or 0),
-        "rank": rank,
-        "rank_total": int(rank_total or 0),
-        "attended": True,
-    }
-    result.update(_rank_award(rank, rank_total))
-    return result
 
 
 def initialize_data_files():
     initialize_database()
-    initialize_nowcoder_summer_school_file()
-    initialize_hdu_multi_school_file()
-
-
-def initialize_nowcoder_summer_school_file():
-    NOWCODER_SUMMER_SCHOOL_FILE.parent.mkdir(parents=True, exist_ok=True)
-    if NOWCODER_SUMMER_SCHOOL_FILE.exists():
-        return
-
-    NOWCODER_SUMMER_SCHOOL_FILE.write_text(
-        json.dumps(_default_nowcoder_summer_school_data(), ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-
-
-def initialize_hdu_multi_school_file():
-    HDU_MULTI_SCHOOL_FILE.parent.mkdir(parents=True, exist_ok=True)
-    if HDU_MULTI_SCHOOL_FILE.exists():
-        return
-
-    HDU_MULTI_SCHOOL_FILE.write_text(
-        json.dumps(_default_hdu_multi_school_data(), ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-
-
-def _normalize_nowcoder_summer_school_data(data):
-    if not isinstance(data, dict):
-        data = _default_nowcoder_summer_school_data()
-
-    result_columns = data.get("result_columns")
-    if not isinstance(result_columns, list) or not result_columns:
-        result_columns = _default_nowcoder_summer_school_data()["result_columns"]
-        data["result_columns"] = result_columns
-
-    contests = data.get("contests")
-    if not isinstance(contests, list) or not contests:
-        contest_count = int(data.get("contest_count") or 10)
-        contests = [
-            {"key": str(index), "label": str(index), "contest_id": ""}
-            for index in range(1, contest_count + 1)
-        ]
-        data["contests"] = contests
-
-    for index, contest in enumerate(contests, start=1):
-        if not isinstance(contest, dict):
-            contest = {"key": str(index), "label": str(index), "contest_id": ""}
-            contests[index - 1] = contest
-        contest["key"] = str(contest.get("key") or index)
-        contest["label"] = str(contest.get("label") or contest["key"])
-        contest["contest_id"] = str(contest.get("contest_id") or "")
-
-    teams = data.get("teams")
-    data["teams"] = teams if isinstance(teams, list) else []
-    for team in data["teams"]:
-        if not isinstance(team, dict):
-            continue
-
-        results = team.get("results")
-        if not isinstance(results, dict):
-            continue
-
-        for value in results.values():
-            if not isinstance(value, dict):
-                continue
-
-            rank_total = _parse_rank_int(value.get("rank_total"))
-            rank = _parse_rank_int(value.get("rank"))
-            if rank <= 0 and rank_total > 0:
-                live = _parse_rank_int(value.get("live"))
-                upsolve = _parse_rank_int(value.get("upsolve"))
-                if value.get("attended") or live > 0 or upsolve > 0:
-                    value.update(_nowcoder_unranked_award_result(rank_total))
-                else:
-                    value.clear()
-                    value.update(_empty_multi_school_result())
-    return data
-
-
-def _normalize_hdu_multi_school_data(data):
-    if not isinstance(data, dict):
-        data = _default_hdu_multi_school_data()
-
-    result_columns = data.get("result_columns")
-    if not isinstance(result_columns, list) or not result_columns:
-        result_columns = _default_hdu_multi_school_data()["result_columns"]
-        data["result_columns"] = result_columns
-
-    contests = data.get("contests")
-    if not isinstance(contests, list) or not contests:
-        contest_count = int(data.get("contest_count") or 10)
-        contests = [
-            {"key": str(index), "label": str(index), "contest_id": ""}
-            for index in range(1, contest_count + 1)
-        ]
-        data["contests"] = contests
-
-    for index, contest in enumerate(contests, start=1):
-        if not isinstance(contest, dict):
-            contest = {"key": str(index), "label": str(index), "contest_id": ""}
-            contests[index - 1] = contest
-        contest["key"] = str(contest.get("key") or index)
-        contest["label"] = str(contest.get("label") or contest["key"])
-        contest["contest_id"] = str(contest.get("contest_id") or "")
-
-    teams = data.get("teams")
-    data["teams"] = teams if isinstance(teams, list) else []
-    for team in data["teams"]:
-        if isinstance(team, dict) and team.get("username") == "team0724" and team.get("name") == "'/u200e'":
-            team["name"] = "/u200e"
-    return data
-
-
-def get_nowcoder_summer_school_data():
-    initialize_nowcoder_summer_school_file()
-    with _NOWCODER_SUMMER_SCHOOL_LOCK:
-        try:
-            data = json.loads(NOWCODER_SUMMER_SCHOOL_FILE.read_text(encoding="utf-8"))
-            return _normalize_nowcoder_summer_school_data(data)
-        except Exception as e:
-            logger.error(f"Error reading nowcoder summer school data: {e}")
-            return _default_nowcoder_summer_school_data()
-
-
-def get_hdu_multi_school_data():
-    initialize_hdu_multi_school_file()
-    with _HDU_MULTI_SCHOOL_LOCK:
-        try:
-            data = json.loads(HDU_MULTI_SCHOOL_FILE.read_text(encoding="utf-8"))
-            return _normalize_hdu_multi_school_data(data)
-        except Exception as e:
-            logger.error(f"Error reading HDU multi school data: {e}")
-            return _default_hdu_multi_school_data()
-
-
-def update_nowcoder_summer_school_contest_ids(contest_ids):
-    if not isinstance(contest_ids, dict):
-        return None
-
-    with _NOWCODER_SUMMER_SCHOOL_LOCK:
-        data = get_nowcoder_summer_school_data()
-        for contest in data.get("contests", []):
-            key = str(contest.get("key") or "")
-            if key not in contest_ids:
-                continue
-
-            contest_id = str(contest_ids.get(key) or "").strip()
-            if contest_id and not contest_id.isdigit():
-                raise ValueError("比赛 ID 只能是数字")
-            contest["contest_id"] = contest_id
-
-        NOWCODER_SUMMER_SCHOOL_FILE.write_text(
-            json.dumps(data, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-        return data
-
-
-def update_hdu_multi_school_contest_ids(contest_ids):
-    if not isinstance(contest_ids, dict):
-        return None
-
-    with _HDU_MULTI_SCHOOL_LOCK:
-        data = get_hdu_multi_school_data()
-        for contest in data.get("contests", []):
-            key = str(contest.get("key") or "")
-            if key not in contest_ids:
-                continue
-
-            contest_id = str(contest_ids.get(key) or "").strip()
-            if contest_id and not contest_id.isdigit():
-                raise ValueError("比赛 ID 只能是数字")
-            contest["contest_id"] = contest_id
-
-        HDU_MULTI_SCHOOL_FILE.write_text(
-            json.dumps(data, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-        return data
-
-
-def refresh_nowcoder_summer_school_contest(contest_key):
-    contest_key = str(contest_key or "")
-    if not contest_key:
-        raise ValueError("比赛编号不能为空")
-
-    with _NOWCODER_SUMMER_SCHOOL_LOCK:
-        data = get_nowcoder_summer_school_data()
-        target_contest = next(
-            (
-                contest for contest in data.get("contests", [])
-                if str(contest.get("key") or "") == contest_key
-            ),
-            None,
-        )
-        if not target_contest:
-            raise ValueError("比赛不存在")
-
-        contest_id = str(target_contest.get("contest_id") or "").strip()
-        if not contest_id:
-            raise ValueError("请先绑定比赛 ID")
-
-        rank_payload = get_nowcoder_team_rank_payload(contest_id)
-        rank_data = rank_payload.get("rank_data") or []
-        rank_total = int(rank_payload.get("rank_count") or 0)
-        target_contest["rank_total"] = rank_total
-        rank_by_team = {
-            _nowcoder_team_name_key(rank_item.get("userName")): rank_item
-            for rank_item in rank_data
-            if isinstance(rank_item, dict)
-        }
-
-        updated = 0
-        for team in data.get("teams", []):
-            team_key = _nowcoder_team_name_key(team.get("name"))
-            rank_item = rank_by_team.get(team_key)
-            results = team.setdefault("results", {})
-            if not rank_item:
-                if rank_data or rank_total:
-                    results[contest_key] = _empty_multi_school_result()
-                continue
-
-            results[contest_key] = _nowcoder_rank_result(rank_item, rank_total)
-            updated += 1
-
-        NOWCODER_SUMMER_SCHOOL_FILE.write_text(
-            json.dumps(data, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-        return {"data": data, "updated": updated, "contest_id": contest_id}
-
-
-def refresh_bound_nowcoder_summer_school_contests():
-    data = get_nowcoder_summer_school_data()
-    refreshed = 0
-    skipped = 0
-    errors = []
-
-    for contest in data.get("contests", []):
-        contest_key = str(contest.get("key") or "")
-        if not str(contest.get("contest_id") or "").strip():
-            skipped += 1
-            continue
-
-        try:
-            refresh_nowcoder_summer_school_contest(contest_key)
-            refreshed += 1
-            time.sleep(2)
-        except Exception as e:
-            errors.append({"contest_key": contest_key, "error": str(e)})
-            logger.error(f"Error refreshing nowcoder summer school contest {contest_key}: {e}")
-
-    return {"refreshed": refreshed, "skipped": skipped, "errors": errors}
-
-
-def refresh_hdu_multi_school_contest(contest_key):
-    contest_key = str(contest_key or "")
-    if not contest_key:
-        raise ValueError("比赛编号不能为空")
-
-    with _HDU_MULTI_SCHOOL_LOCK:
-        data = get_hdu_multi_school_data()
-        target_contest = next(
-            (
-                contest for contest in data.get("contests", [])
-                if str(contest.get("key") or "") == contest_key
-            ),
-            None,
-        )
-        if not target_contest:
-            raise ValueError("比赛不存在")
-
-        contest_id = str(target_contest.get("contest_id") or "").strip()
-        if not contest_id:
-            raise ValueError("请先绑定比赛 ID")
-
-        rank_payload = get_hdu_team_rank_payload(contest_id)
-        rank_data = rank_payload.get("rank_data") or []
-        rank_total = int(rank_payload.get("rank_count") or 0)
-        target_contest["rank_total"] = rank_total
-        rank_by_username = {
-            _hdu_team_username_key(rank_item.get("username")): rank_item
-            for rank_item in rank_data
-            if isinstance(rank_item, dict)
-        }
-
-        updated = 0
-        for team in data.get("teams", []):
-            team_key = _hdu_team_username_key(team.get("username"))
-            rank_item = rank_by_username.get(team_key)
-            results = team.setdefault("results", {})
-            if not rank_item:
-                if rank_data or rank_total:
-                    results[contest_key] = _empty_multi_school_result()
-                continue
-
-            results[contest_key] = _hdu_rank_result(rank_item, rank_total)
-            updated += 1
-
-        HDU_MULTI_SCHOOL_FILE.write_text(
-            json.dumps(data, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-        return {"data": data, "updated": updated, "contest_id": contest_id}
-
-
-def refresh_bound_hdu_multi_school_contests():
-    data = get_hdu_multi_school_data()
-    refreshed = 0
-    skipped = 0
-    errors = []
-
-    for contest in data.get("contests", []):
-        contest_key = str(contest.get("key") or "")
-        if not str(contest.get("contest_id") or "").strip():
-            skipped += 1
-            continue
-
-        try:
-            refresh_hdu_multi_school_contest(contest_key)
-            refreshed += 1
-            time.sleep(2)
-        except Exception as e:
-            errors.append({"contest_key": contest_key, "error": str(e)})
-            logger.error(f"Error refreshing HDU multi school contest {contest_key}: {e}")
-
-    return {"refreshed": refreshed, "skipped": skipped, "errors": errors}
 
 
 def refresh_upcoming_contests():
@@ -717,7 +174,19 @@ def refresh_contest_participation(contest_id):
 
     platform = target_contest.get("platform", "").lower()
     cid = target_contest.get("contest_id", "")
+    contest_info = _get_platform_contest_info(platform, cid)
+    metadata = {}
+    if contest_info.get("name"):
+        metadata["name"] = contest_info["name"]
+        target_contest["name"] = contest_info["name"]
+    if contest_info.get("end_time"):
+        metadata["end_time"] = contest_info["end_time"]
+        target_contest["end_time"] = contest_info["end_time"]
+    if metadata:
+        update_contest_metadata(contest_id, **metadata)
+
     users = list_users()
+    contest_end_ts = contest_info.get("end_ts") or _contest_end_timestamp(target_contest)
 
     from_second = 0
     if contest_time is not None:
@@ -727,17 +196,28 @@ def refresh_contest_participation(contest_id):
     results = {}
     for user in users:
         current_user_id = user.get("id")
-        old_ac_count = int(target_contest.get("results", {}).get(current_user_id) or 0)
-
-        ac_count = 0
+        ac_result = {"official": 0, "upsolve": 0}
         if platform == "codeforces":
-            ac_count = get_codeforces_ac(cid, user.get("codeforces", ""))
+            ac_result = get_codeforces_ac_breakdown(
+                cid,
+                user.get("codeforces", ""),
+                contest_end_ts,
+            )
         elif platform == "atcoder":
-            ac_count = get_atcoder_ac(cid, user.get("atcoder", ""), from_second)
+            ac_result = get_atcoder_ac_breakdown(
+                cid,
+                user.get("atcoder", ""),
+                from_second,
+                contest_end_ts,
+            )
         elif platform in ("nowcoder", "cowcoder", "牛客"):
-            ac_count = get_nowcoder_ac(cid, user.get("nowcoder", ""))
+            ac_result = get_nowcoder_ac_breakdown(
+                cid,
+                user.get("nowcoder", ""),
+                contest_end_ts,
+            )
 
-        results[current_user_id] = max(old_ac_count, ac_count)
+        results[current_user_id] = ac_result
 
     target_contest["results"] = results
     save_contest_results(contest_id, results)

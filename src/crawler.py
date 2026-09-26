@@ -10,6 +10,207 @@ from bs4 import BeautifulSoup
 from loguru import logger
 
 
+_CODEFORCES_CONTESTS_CACHE = None
+_ATCODER_CONTESTS_CACHE = None
+_NOWCODER_VIP_CONTESTS_CACHE = None
+
+
+def _format_local_time(timestamp):
+    if timestamp is None:
+        return ""
+    return datetime.fromtimestamp(int(timestamp)).strftime("%Y-%m-%d %H:%M")
+
+
+def _zero_breakdown():
+    return {"official": 0, "upsolve": 0, "submitted": False}
+
+
+def _split_accepted_times(accepted_times, contest_end_ts, submitted=False):
+    result = _zero_breakdown()
+    result["submitted"] = bool(submitted or accepted_times)
+    for accepted_ts in accepted_times.values():
+        if contest_end_ts is not None and accepted_ts > contest_end_ts:
+            result["upsolve"] += 1
+        else:
+            result["official"] += 1
+    return result
+
+
+def _record_first_accept(accepted_times, problem_id, accepted_ts):
+    if problem_id is None or accepted_ts is None:
+        return
+    problem_key = str(problem_id)
+    accepted_ts = int(accepted_ts)
+    current = accepted_times.get(problem_key)
+    if current is None or accepted_ts < current:
+        accepted_times[problem_key] = accepted_ts
+
+
+def _get_codeforces_contests():
+    global _CODEFORCES_CONTESTS_CACHE
+    if _CODEFORCES_CONTESTS_CACHE is not None:
+        return _CODEFORCES_CONTESTS_CACHE
+
+    url = "https://codeforces.com/api/contest.list"
+    response = requests.get(url, timeout=15)
+    response.raise_for_status()
+    data = response.json()
+    if data.get("status") != "OK":
+        raise ValueError(data.get("comment") or "Codeforces contest.list failed")
+
+    _CODEFORCES_CONTESTS_CACHE = {
+        str(contest.get("id")): contest
+        for contest in data.get("result", [])
+        if contest.get("id") is not None
+    }
+    return _CODEFORCES_CONTESTS_CACHE
+
+
+def get_codeforces_contest_info(contest_id):
+    try:
+        contest = _get_codeforces_contests().get(str(contest_id))
+        if not contest:
+            return {}
+
+        start_ts = contest.get("startTimeSeconds")
+        duration = contest.get("durationSeconds")
+        end_ts = start_ts + duration if start_ts is not None and duration is not None else None
+        return {
+            "name": contest.get("name") or "",
+            "start_ts": start_ts,
+            "end_ts": end_ts,
+            "end_time": _format_local_time(end_ts),
+        }
+    except Exception as e:
+        logger.error(f"error fetching codeforces contest info for {contest_id}: {e}")
+        return {}
+
+
+def _get_atcoder_contests():
+    global _ATCODER_CONTESTS_CACHE
+    if _ATCODER_CONTESTS_CACHE is not None:
+        return _ATCODER_CONTESTS_CACHE
+
+    url = "https://kenkoooo.com/atcoder/resources/contests.json"
+    response = requests.get(url, timeout=15)
+    response.raise_for_status()
+    data = response.json()
+    _ATCODER_CONTESTS_CACHE = {
+        str(contest.get("id")): contest
+        for contest in data
+        if contest.get("id")
+    }
+    return _ATCODER_CONTESTS_CACHE
+
+
+def get_atcoder_contest_info(contest_id):
+    try:
+        contest = _get_atcoder_contests().get(str(contest_id))
+        if not contest:
+            return {}
+
+        start_ts = contest.get("start_epoch_second")
+        duration = contest.get("duration_second")
+        end_ts = start_ts + duration if start_ts is not None and duration is not None else None
+        return {
+            "name": contest.get("title") or "",
+            "start_ts": start_ts,
+            "end_ts": end_ts,
+            "end_time": _format_local_time(end_ts),
+        }
+    except Exception as e:
+        logger.error(f"error fetching atcoder contest info for {contest_id}: {e}")
+        return {}
+
+
+def _get_nowcoder_vip_contests():
+    global _NOWCODER_VIP_CONTESTS_CACHE
+    if _NOWCODER_VIP_CONTESTS_CACHE is not None:
+        return _NOWCODER_VIP_CONTESTS_CACHE
+
+    _NOWCODER_VIP_CONTESTS_CACHE = {}
+    url = "https://ac.nowcoder.com/acm/contest/vip-index"
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+        ),
+        "Referer": "https://www.google.com/",
+    }
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+        for item in soup.select("div.platform-item.js-item"):
+            raw_json = item.get("data-json")
+            if not raw_json:
+                continue
+            try:
+                contest_data = json.loads(html.unescape(raw_json))
+            except json.JSONDecodeError:
+                continue
+            contest_id = contest_data.get("contestId")
+            if contest_id is not None:
+                _NOWCODER_VIP_CONTESTS_CACHE[str(contest_id)] = contest_data
+    except Exception as e:
+        logger.error(f"error fetching nowcoder vip contest list: {e}")
+    return _NOWCODER_VIP_CONTESTS_CACHE
+
+
+def get_nowcoder_contest_info(contest_id):
+    info = {}
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+        ),
+        "Referer": f"https://ac.nowcoder.com/acm/contest/{contest_id}",
+    }
+
+    try:
+        contest_data = _get_nowcoder_vip_contests().get(str(contest_id), {})
+        if contest_data.get("contestName"):
+            info["name"] = contest_data.get("contestName")
+
+        start_time = contest_data.get("contestStartTime")
+        end_time = contest_data.get("contestEndTime")
+        if start_time:
+            info["start_ts"] = int(start_time / 1000)
+        if end_time:
+            info["end_ts"] = int(end_time / 1000)
+            info["end_time"] = _format_local_time(info["end_ts"])
+
+        url = "https://ac.nowcoder.com/acm-heavy/acm/contest/real-time-rank-data"
+        response = requests.get(
+            url,
+            params={
+                "token": "",
+                "id": str(contest_id),
+                "limit": "0",
+                "_": str(int(time.time() * 1000)),
+            },
+            headers=headers,
+            timeout=15,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        if payload.get("code") != 0:
+            raise ValueError(payload)
+
+        basic_info = (payload.get("data") or {}).get("basicInfo") or {}
+        begin_ms = basic_info.get("contestBeginTime")
+        end_ms = basic_info.get("contestEndTime")
+        if begin_ms:
+            info["start_ts"] = int(begin_ms / 1000)
+        if end_ms:
+            info["end_ts"] = int(end_ms / 1000)
+            info["end_time"] = _format_local_time(info["end_ts"])
+    except Exception as e:
+        logger.error(f"error fetching nowcoder contest info for {contest_id}: {e}")
+
+    return info
+
+
 def get_upcoming_codeforces_contests(starts_after=None):
     url = "https://codeforces.com/api/contest.list"
     try:
@@ -28,11 +229,13 @@ def get_upcoming_codeforces_contests(starts_after=None):
                 continue
 
             cid = str(contest.get("id"))
+            end_ts = contest.get("startTimeSeconds") + contest.get("durationSeconds", 0)
             upcoming.append({
                 "platform": "Codeforces",
                 "contest_id": cid,
                 "name": contest.get("name"),
                 "time": dt.strftime("%Y-%m-%d %H:%M"),
+                "end_time": _format_local_time(end_ts),
                 "link": f"https://codeforces.com/contests/{cid}",
                 "id": str(uuid.uuid4()),
             })
@@ -88,12 +291,14 @@ def get_upcoming_atcoder_contests(starts_after=None):
                 if starts_after is not None and beijing_time < starts_after:
                     continue
 
+                contest_info = get_atcoder_contest_info(contest_id)
                 seen.add(contest_id)
                 upcoming.append({
                     "platform": "AtCoder",
                     "contest_id": contest_id,
-                    "name": link_tag.text.strip(),
+                    "name": contest_info.get("name") or link_tag.text.strip(),
                     "time": beijing_time.strftime("%Y-%m-%d %H:%M"),
+                    "end_time": contest_info.get("end_time", ""),
                     "link": f"https://atcoder.jp{relative_url}",
                     "id": str(uuid.uuid4()),
                 })
@@ -144,11 +349,13 @@ def get_upcoming_nowcoder_contests(starts_after=None):
             if starts_after is not None and dt < starts_after:
                 continue
 
+            end_time = contest_data.get("contestEndTime")
             upcoming.append({
                 "platform": "NowCoder",
                 "contest_id": contest_id,
                 "name": name,
                 "time": dt.strftime("%Y-%m-%d %H:%M"),
+                "end_time": _format_local_time(end_time / 1000) if end_time else "",
                 "link": f"https://ac.nowcoder.com/acm/contest/{contest_id}",
                 "id": str(uuid.uuid4()),
             })
@@ -248,9 +455,9 @@ def get_atcoder_rating(handle):
     return None
 
 
-def get_codeforces_ac(contest_id, handle):
+def get_codeforces_ac_breakdown(contest_id, handle, contest_end_ts=None):
     if not handle:
-        return 0
+        return _zero_breakdown()
 
     url = "https://codeforces.com/api/contest.status"
     params = {
@@ -259,28 +466,40 @@ def get_codeforces_ac(contest_id, handle):
     }
 
     try:
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, timeout=15)
         data = response.json()
 
         if data["status"] == "OK":
-            accepted = {
-                str(submission.get("problem", {}).get("index", ""))
-                for submission in data.get("result", [])
-                if submission.get("verdict") == "OK"
-            }
-            accepted.discard("")
-            return len(accepted)
+            submissions = data.get("result", [])
+            accepted_times = {}
+            for submission in submissions:
+                if submission.get("verdict") != "OK":
+                    continue
+                problem_id = submission.get("problem", {}).get("index", "")
+                if not problem_id:
+                    continue
+                _record_first_accept(
+                    accepted_times,
+                    problem_id,
+                    submission.get("creationTimeSeconds"),
+                )
+            return _split_accepted_times(accepted_times, contest_end_ts, bool(submissions))
 
         logger.error(f"error checking codeforces for {handle} in {contest_id}: {data.get('comment')}")
-        return 0
+        return _zero_breakdown()
     except Exception as e:
         logger.error(f"error checking codeforces for {handle}: {e}")
-        return 0
+        return _zero_breakdown()
 
 
-def get_atcoder_ac(contest_id, user_id, from_second=0):
+def get_codeforces_ac(contest_id, handle):
+    result = get_codeforces_ac_breakdown(contest_id, handle, None)
+    return result["official"] + result["upsolve"]
+
+
+def get_atcoder_ac_breakdown(contest_id, user_id, from_second=0, contest_end_ts=None):
     if not user_id:
-        return 0
+        return _zero_breakdown()
 
     url = "https://kenkoooo.com/atcoder/atcoder-api/v3/user/submissions"
     params = {
@@ -297,29 +516,54 @@ def get_atcoder_ac(contest_id, user_id, from_second=0):
         response = requests.get(url, params=params, headers=headers, timeout=15)
         if response.status_code == 200:
             submissions = response.json()
-            accepted = {
-                submission.get("problem_id")
-                for submission in submissions
-                if submission.get("contest_id") == contest_id
-                and submission.get("result") == "AC"
-            }
-            accepted.discard(None)
-            return len(accepted)
+            accepted_times = {}
+            submitted = False
+            for submission in submissions:
+                if submission.get("contest_id") != contest_id:
+                    continue
+                submitted = True
+                if submission.get("result") != "AC":
+                    continue
+                _record_first_accept(
+                    accepted_times,
+                    submission.get("problem_id"),
+                    submission.get("epoch_second"),
+                )
+            return _split_accepted_times(accepted_times, contest_end_ts, submitted)
 
         logger.error(f"error checking atcoder for {user_id}, status: {response.status_code}")
-        return 0
+        return _zero_breakdown()
     except Exception as e:
         logger.error(f"error checking atcoder for {user_id}: {e}")
-        return 0
+        return _zero_breakdown()
 
 
-def get_nowcoder_ac(contest_id, user_id):
+def get_atcoder_ac(contest_id, user_id, from_second=0):
+    result = get_atcoder_ac_breakdown(contest_id, user_id, from_second, None)
+    return result["official"] + result["upsolve"]
+
+
+def _is_nowcoder_accepted(submission):
+    status_message = str(submission.get("statusMessage") or "").strip().lower()
+    if status_message in {"答案正确", "accepted", "ac"}:
+        return True
+
+    full_score = submission.get("fullScore")
+    score = submission.get("score")
+    try:
+        return full_score not in (None, 0, 0.0) and float(score) == float(full_score)
+    except (TypeError, ValueError):
+        return False
+
+
+def get_nowcoder_ac_breakdown(contest_id, user_id, contest_end_ts=None):
     if not user_id:
-        return 0
+        return _zero_breakdown()
 
     url = "https://ac.nowcoder.com/acm-heavy/acm/contest/status-list"
     headers = {"user-agent": "Mozilla/5.0"}
-    accepted = set()
+    accepted_times = {}
+    submitted = False
     page = 1
     page_count = 1
 
@@ -343,216 +587,30 @@ def get_nowcoder_ac(contest_id, user_id):
 
             payload = res_json.get("data", {})
             submissions = res_json.get("data", {}).get("data", [])
+            if submissions:
+                submitted = True
             for submission in submissions:
                 problem_id = submission.get("problemId")
                 if problem_id is None:
                     continue
-                if submission.get("score") == submission.get("fullScore"):
-                    accepted.add(str(problem_id))
+                if _is_nowcoder_accepted(submission):
+                    submit_time = submission.get("submitTime")
+                    submit_ts = int(submit_time / 1000) if submit_time else None
+                    _record_first_accept(accepted_times, problem_id, submit_ts)
 
             basic_info = payload.get("basicInfo", {})
             page_count = int(basic_info.get("pageCount") or page_count)
             page += 1
     except Exception as e:
         logger.error(f"error checking nowcoder for {user_id}: {e}")
-        return 0
+        return _zero_breakdown()
 
-    return len(accepted)
-
-
-def get_nowcoder_team_rank_payload(contest_id, search_user_name="云南大学"):
-    if not contest_id:
-        return {"rank_data": [], "rank_count": 0}
-
-    url = "https://ac.nowcoder.com/acm-heavy/acm/contest/real-time-rank-data"
-    headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
-        ),
-        "Referer": f"https://ac.nowcoder.com/acm/contest/{contest_id}",
-    }
-
-    def fetch_rank(search_name):
-        params = {
-            "token": "",
-            "id": str(contest_id),
-            "searchUserName": search_name,
-            "limit": "0",
-            "_": str(int(time.time() * 1000)),
-        }
-        response = requests.get(url, params=params, headers=headers, timeout=15)
-        response.raise_for_status()
-        payload = response.json()
-        if payload.get("code") != 0:
-            raise ValueError(payload)
-
-        data = payload.get("data") or {}
-        rank_data = data.get("rankData") or []
-        basic_info = data.get("basicInfo") or {}
-        return {
-            "rank_data": rank_data if isinstance(rank_data, list) else [],
-            "rank_count": int(basic_info.get("rankCount") or 0),
-        }
-
-    try:
-        result = fetch_rank(search_user_name)
-        if search_user_name:
-            total_result = fetch_rank("")
-            result["rank_count"] = total_result.get("rank_count") or result["rank_count"]
-        return result
-    except Exception as e:
-        logger.error(f"error fetching nowcoder team rank for {contest_id}: {e}")
-        return {"rank_data": [], "rank_count": 0}
+    return _split_accepted_times(accepted_times, contest_end_ts, submitted)
 
 
-def get_nowcoder_team_rank_data(contest_id, search_user_name="云南大学"):
-    return get_nowcoder_team_rank_payload(contest_id, search_user_name)["rank_data"]
-
-
-def get_hdu_team_rank_payload(
-    contest_id,
-    search="云南大学",
-    username="guest",
-    password="guest",
-):
-    if not contest_id:
-        return {"rank_data": [], "rank_count": 0}
-
-    session = requests.Session()
-    headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
-        ),
-    }
-    contest_id = str(contest_id)
-    login_url = f"https://acm.hdu.edu.cn/contest/login?cid={contest_id}"
-    rank_url = "https://acm.hdu.edu.cn/contest/rank"
-
-    def fetch_rank_page(params):
-        response = session.get(
-            rank_url,
-            params=params,
-            headers={**headers, "Referer": f"https://acm.hdu.edu.cn/contest/problems?cid={contest_id}"},
-            timeout=15,
-        )
-        response.raise_for_status()
-        response.encoding = "utf-8"
-        if "/contest/login" in response.url:
-            raise ValueError("login required")
-        return BeautifulSoup(response.text, "html.parser")
-
-    def parse_rank_rows(soup):
-        rank_data = []
-        for row in soup.select("tr.page-card-row"):
-            cols = row.find_all("td")
-            if len(cols) < 3:
-                continue
-
-            author_lines = [
-                line.strip()
-                for line in cols[1].get_text("\n", strip=True).splitlines()
-                if line.strip()
-            ]
-            if not author_lines:
-                continue
-
-            solved_text = cols[2].get_text(strip=True)
-            solved_match = re.search(r"\d+", solved_text)
-            rank_text = cols[0].get_text(strip=True)
-            rank_match = re.search(r"\d+", rank_text)
-            problem_cells = cols[4:]
-            attended = any(
-                any(
-                    status_class in (col.get("class") or [])
-                    for status_class in (
-                        "rank-status-accepted",
-                        "rank-status-trying",
-                        "rank-status-solved",
-                        "rank-status-pending",
-                    )
-                )
-                for col in problem_cells
-            )
-            upsolve_count = sum(
-                1
-                for col in problem_cells
-                if "rank-status-solved" in (col.get("class") or [])
-            )
-            rank_data.append({
-                "username": author_lines[0],
-                "name": author_lines[1] if len(author_lines) > 1 else "",
-                "school": author_lines[2] if len(author_lines) > 2 else "",
-                "rank": int(rank_match.group()) if rank_match else 0,
-                "solved": int(solved_match.group()) if solved_match else 0,
-                "upsolve": upsolve_count,
-                "attended": attended,
-            })
-        return rank_data
-
-    def parse_rank_count(soup):
-        page_numbers = [
-            int(text)
-            for text in (
-                node.get_text(" ", strip=True)
-                for node in soup.select("a,button")
-            )
-            if text.isdigit()
-        ]
-        last_page = max(page_numbers, default=1)
-        last_page_soup = soup
-        if last_page > 1:
-            last_page_soup = fetch_rank_page({
-                "cid": contest_id,
-                "group": "all",
-                "page": str(last_page),
-            })
-
-        ranks = [
-            row.get("rank", 0)
-            for row in parse_rank_rows(last_page_soup)
-            if row.get("rank")
-        ]
-        return max(ranks, default=0)
-
-    try:
-        session.get(login_url, headers=headers, timeout=15)
-        login_response = session.post(
-            login_url,
-            data={"username": username, "password": password},
-            headers={**headers, "Referer": login_url},
-            timeout=15,
-            allow_redirects=True,
-        )
-        login_response.raise_for_status()
-
-        search_soup = fetch_rank_page({
-            "cid": contest_id,
-            "group": "all",
-            "search": search,
-        })
-        all_soup = fetch_rank_page({
-            "cid": contest_id,
-            "group": "all",
-            "search": "",
-        })
-        return {
-            "rank_data": parse_rank_rows(search_soup),
-            "rank_count": parse_rank_count(all_soup),
-        }
-    except Exception as e:
-        logger.error(f"error fetching HDU team rank for {contest_id}: {e}")
-        return {"rank_data": [], "rank_count": 0}
-
-
-def get_hdu_team_rank_data(
-    contest_id,
-    search="云南大学",
-    username="guest",
-    password="guest",
-):
-    return get_hdu_team_rank_payload(contest_id, search, username, password)["rank_data"]
+def get_nowcoder_ac(contest_id, user_id):
+    result = get_nowcoder_ac_breakdown(contest_id, user_id, None)
+    return result["official"] + result["upsolve"]
 
 
 if __name__ == "__main__":

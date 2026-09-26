@@ -71,6 +71,9 @@ def _create_schema(conn):
             contest_id TEXT NOT NULL,
             user_id TEXT NOT NULL,
             ac_count INTEGER NOT NULL DEFAULT 0,
+            official_count INTEGER NOT NULL DEFAULT 0,
+            upsolve_count INTEGER NOT NULL DEFAULT 0,
+            submitted INTEGER NOT NULL DEFAULT 0,
             PRIMARY KEY (contest_id, user_id),
             FOREIGN KEY (contest_id) REFERENCES contests(id) ON DELETE CASCADE
         );
@@ -97,31 +100,66 @@ def _migrate_contest_results_schema(conn):
         row["name"]
         for row in conn.execute("PRAGMA table_info(contest_results)").fetchall()
     }
-    if "participated" not in columns or "ac_count" in columns:
+    if "participated" in columns and "ac_count" not in columns:
+        conn.executescript(
+            """
+            ALTER TABLE contest_results RENAME TO contest_results_old;
+
+            CREATE TABLE contest_results (
+                contest_id TEXT NOT NULL,
+                user_id TEXT NOT NULL,
+                ac_count INTEGER NOT NULL DEFAULT 0,
+                official_count INTEGER NOT NULL DEFAULT 0,
+                upsolve_count INTEGER NOT NULL DEFAULT 0,
+                submitted INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY (contest_id, user_id),
+                FOREIGN KEY (contest_id) REFERENCES contests(id) ON DELETE CASCADE
+            );
+
+            INSERT INTO contest_results
+            (contest_id, user_id, ac_count, official_count, upsolve_count, submitted)
+            SELECT contest_id, user_id,
+                   CASE WHEN participated THEN 1 ELSE 0 END,
+                   CASE WHEN participated THEN 1 ELSE 0 END,
+                   0,
+                   CASE WHEN participated THEN 1 ELSE 0 END
+            FROM contest_results_old;
+
+            DROP TABLE contest_results_old;
+
+            CREATE INDEX IF NOT EXISTS idx_contest_results_user_id
+                ON contest_results(user_id);
+            """
+        )
         return
 
-    conn.executescript(
-        """
-        ALTER TABLE contest_results RENAME TO contest_results_old;
+    if "official_count" not in columns:
+        conn.execute(
+            "ALTER TABLE contest_results ADD COLUMN official_count INTEGER NOT NULL DEFAULT 0"
+        )
+        conn.execute(
+            """
+            UPDATE contest_results
+            SET official_count = ac_count
+            WHERE official_count = 0 AND ac_count > 0
+            """
+        )
 
-        CREATE TABLE contest_results (
-            contest_id TEXT NOT NULL,
-            user_id TEXT NOT NULL,
-            ac_count INTEGER NOT NULL DEFAULT 0,
-            PRIMARY KEY (contest_id, user_id),
-            FOREIGN KEY (contest_id) REFERENCES contests(id) ON DELETE CASCADE
-        );
+    if "upsolve_count" not in columns:
+        conn.execute(
+            "ALTER TABLE contest_results ADD COLUMN upsolve_count INTEGER NOT NULL DEFAULT 0"
+        )
 
-        INSERT INTO contest_results (contest_id, user_id, ac_count)
-        SELECT contest_id, user_id, CASE WHEN participated THEN 1 ELSE 0 END
-        FROM contest_results_old;
-
-        DROP TABLE contest_results_old;
-
-        CREATE INDEX IF NOT EXISTS idx_contest_results_user_id
-            ON contest_results(user_id);
-        """
-    )
+    if "submitted" not in columns:
+        conn.execute(
+            "ALTER TABLE contest_results ADD COLUMN submitted INTEGER NOT NULL DEFAULT 0"
+        )
+        conn.execute(
+            """
+            UPDATE contest_results
+            SET submitted = CASE WHEN ac_count > 0 THEN 1 ELSE 0 END
+            """
+        )
 
 
 def _prune_orphaned_rows(conn):
@@ -152,6 +190,25 @@ def _load_extra(row):
         return extra if isinstance(extra, dict) else {}
     except Exception:
         return {}
+
+
+def _normalize_contest_result(value):
+    if isinstance(value, dict):
+        official = int(value.get("official", value.get("official_count", 0)) or 0)
+        upsolve = int(value.get("upsolve", value.get("upsolve_count", 0)) or 0)
+        submitted = bool(
+            value.get("submitted", official > 0 or upsolve > 0)
+        )
+    else:
+        official = int(value or 0)
+        upsolve = 0
+        submitted = official > 0
+    return {
+        "official": max(official, 0),
+        "upsolve": max(upsolve, 0),
+        "total": max(official, 0) + max(upsolve, 0),
+        "submitted": submitted,
+    }
 
 
 def list_users():
@@ -469,7 +526,7 @@ def list_contests():
             placeholders = ",".join("?" for _ in contest_ids)
             result_rows = conn.execute(
                 f"""
-                SELECT contest_id, user_id, ac_count
+                SELECT contest_id, user_id, ac_count, official_count, upsolve_count, submitted
                 FROM contest_results
                 WHERE contest_id IN ({placeholders})
                 """,
@@ -480,9 +537,12 @@ def list_contests():
 
     results_by_contest = {}
     for result in result_rows:
-        results_by_contest.setdefault(result["contest_id"], {})[result["user_id"]] = result[
-            "ac_count"
-        ]
+        results_by_contest.setdefault(result["contest_id"], {})[result["user_id"]] = {
+            "official": result["official_count"],
+            "upsolve": result["upsolve_count"],
+            "total": result["ac_count"],
+            "submitted": bool(result["submitted"]),
+        }
 
     contests = []
     for row in rows:
@@ -526,7 +586,7 @@ def list_contests_page(page_size=20, cursor=None):
             placeholders = ",".join("?" for _ in contest_ids)
             result_rows = conn.execute(
                 f"""
-                SELECT contest_id, user_id, ac_count
+                SELECT contest_id, user_id, ac_count, official_count, upsolve_count, submitted
                 FROM contest_results
                 WHERE contest_id IN ({placeholders})
                 """,
@@ -537,9 +597,12 @@ def list_contests_page(page_size=20, cursor=None):
 
     results_by_contest = {}
     for result in result_rows:
-        results_by_contest.setdefault(result["contest_id"], {})[result["user_id"]] = result[
-            "ac_count"
-        ]
+        results_by_contest.setdefault(result["contest_id"], {})[result["user_id"]] = {
+            "official": result["official_count"],
+            "upsolve": result["upsolve_count"],
+            "total": result["ac_count"],
+            "submitted": bool(result["submitted"]),
+        }
 
     contests = []
     for row in page_rows:
@@ -600,15 +663,60 @@ def save_contests(contests):
 def save_contest_results(contest_uuid, results):
     with _DB_LOCK, _connect() as conn:
         conn.execute("DELETE FROM contest_results WHERE contest_id = ?", (contest_uuid,))
-        for user_id, ac_count in results.items():
+        for user_id, raw_result in results.items():
+            result = _normalize_contest_result(raw_result)
             conn.execute(
                 """
                 INSERT OR REPLACE INTO contest_results
-                (contest_id, user_id, ac_count)
-                VALUES (?, ?, ?)
+                (contest_id, user_id, ac_count, official_count, upsolve_count, submitted)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (contest_uuid, user_id, int(ac_count or 0)),
+                (
+                    contest_uuid,
+                    user_id,
+                    result["total"],
+                    result["official"],
+                    result["upsolve"],
+                    1 if result["submitted"] else 0,
+                ),
             )
+
+
+def update_contest_metadata(contest_uuid, **metadata):
+    allowed_keys = {"name", "time", "link", "end_time"}
+    updates = {key: value for key, value in metadata.items() if key in allowed_keys and value}
+    if not updates:
+        return
+
+    with _DB_LOCK, _connect() as conn:
+        row = conn.execute(
+            "SELECT name, time, link, extra FROM contests WHERE id = ?",
+            (contest_uuid,),
+        ).fetchone()
+        if not row:
+            return
+
+        extra = _load_extra(row)
+        name = updates.get("name", row["name"])
+        time = updates.get("time", row["time"])
+        link = updates.get("link", row["link"])
+        if updates.get("end_time"):
+            extra["end_time"] = updates["end_time"]
+
+        conn.execute(
+            """
+            UPDATE contests
+            SET name = ?, time = ?, link = ?, extra = ?
+            WHERE id = ?
+            """,
+            (
+                name,
+                time,
+                link,
+                json.dumps(extra, ensure_ascii=False),
+                contest_uuid,
+            ),
+        )
 
 
 def _replace_contests(conn, contests):
@@ -634,14 +742,22 @@ def _replace_contests(conn, contests):
                 _extra_payload(contest, known_keys),
             ),
         )
-        for user_id, ac_count in (contest.get("results") or {}).items():
+        for user_id, raw_result in (contest.get("results") or {}).items():
+            result = _normalize_contest_result(raw_result)
             conn.execute(
                 """
                 INSERT OR REPLACE INTO contest_results
-                (contest_id, user_id, ac_count)
-                VALUES (?, ?, ?)
+                (contest_id, user_id, ac_count, official_count, upsolve_count, submitted)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (contest.get("id"), user_id, int(ac_count or 0)),
+                (
+                    contest.get("id"),
+                    user_id,
+                    result["total"],
+                    result["official"],
+                    result["upsolve"],
+                    1 if result["submitted"] else 0,
+                ),
             )
 
 
