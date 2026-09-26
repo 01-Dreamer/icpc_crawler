@@ -26,6 +26,7 @@
           "upsolve": 0,
           "rank": 420,
           "rank_total": 1080,
+          "attended": true,
           "award": "bronze",
           "award_label": "铜"
         },
@@ -63,8 +64,13 @@
           "upsolve": ""
         },
         "9": {
-          "live": "",
-          "upsolve": ""
+          "live": 1,
+          "upsolve": 0,
+          "rank": 667,
+          "rank_total": 1080,
+          "attended": true,
+          "award": "iron",
+          "award_label": "铁"
         },
         "10": {
           "live": "",
@@ -87,6 +93,7 @@
           "upsolve": 2,
           "rank": 715,
           "rank_total": 1080,
+          "attended": true,
           "award": "iron",
           "award_label": "铁"
         },
@@ -131,20 +138,40 @@
           "award_label": "铁"
         },
         "7": {
-          "live": "",
-          "upsolve": ""
+          "live": 2,
+          "upsolve": 0,
+          "rank": 645,
+          "rank_total": 1080,
+          "attended": true,
+          "award": "bronze",
+          "award_label": "铜"
         },
         "8": {
-          "live": "",
-          "upsolve": ""
+          "live": 1,
+          "upsolve": 1,
+          "rank": 697,
+          "rank_total": 1080,
+          "attended": true,
+          "award": "iron",
+          "award_label": "铁"
         },
         "9": {
-          "live": "",
-          "upsolve": ""
+          "live": 1,
+          "upsolve": 0,
+          "rank": 685,
+          "rank_total": 1080,
+          "attended": true,
+          "award": "iron",
+          "award_label": "铁"
         },
         "10": {
-          "live": "",
-          "upsolve": ""
+          "live": 2,
+          "upsolve": 0,
+          "rank": 621,
+          "rank_total": 1080,
+          "attended": true,
+          "award": "bronze",
+          "award_label": "铜"
         }
       },
       "username": "team0724"
@@ -163,6 +190,7 @@
           "upsolve": 0,
           "rank": 785,
           "rank_total": 1080,
+          "attended": true,
           "award": "iron",
           "award_label": "铁"
         },
@@ -192,8 +220,13 @@
           "award_label": "铁"
         },
         "7": {
-          "live": "",
-          "upsolve": ""
+          "live": 1,
+          "upsolve": 0,
+          "rank": 695,
+          "rank_total": 1080,
+          "attended": true,
+          "award": "iron",
+          "award_label": "铁"
         },
         "8": {
           "live": "",
@@ -204,8 +237,13 @@
           "upsolve": ""
         },
         "10": {
-          "live": "",
-          "upsolve": ""
+          "live": 0,
+          "upsolve": 1,
+          "rank": 900,
+          "rank_total": 1080,
+          "attended": true,
+          "award": "iron",
+          "award_label": "铁"
         }
       },
       "username": "team0725"
@@ -224,6 +262,7 @@
           "upsolve": 1,
           "rank": 552,
           "rank_total": 1080,
+          "attended": true,
           "award": "bronze",
           "award_label": "铜"
         },
@@ -272,8 +311,13 @@
           "upsolve": ""
         },
         "8": {
-          "live": "",
-          "upsolve": ""
+          "live": 2,
+          "upsolve": 0,
+          "rank": 649,
+          "rank_total": 1080,
+          "attended": true,
+          "award": "iron",
+          "award_label": "铁"
         },
         "9": {
           "live": "",
@@ -300,6 +344,7 @@
           "upsolve": 0,
           "rank": 517,
           "rank_total": 1080,
+          "attended": true,
           "award": "bronze",
           "award_label": "铜"
         },
@@ -344,8 +389,13 @@
           "award_label": "铜"
         },
         "7": {
-          "live": "",
-          "upsolve": ""
+          "live": 1,
+          "upsolve": 0,
+          "rank": 711,
+          "rank_total": 1080,
+          "attended": true,
+          "award": "iron",
+          "award_label": "铁"
         },
         "8": {
           "live": "",
@@ -368,7 +418,7 @@
       "key": "1",
       "label": "1",
       "contest_id": "1229",
-      "rank_total": 0
+      "rank_total": 1080
     },
     {
       "key": "2",
@@ -404,25 +454,25 @@
       "key": "7",
       "label": "7",
       "contest_id": "1235",
-      "rank_total": 0
+      "rank_total": 1080
     },
     {
       "key": "8",
       "label": "8",
       "contest_id": "1236",
-      "rank_total": 0
+      "rank_total": 1080
     },
     {
       "key": "9",
       "label": "9",
       "contest_id": "1237",
-      "rank_total": 0
+      "rank_total": 1080
     },
     {
       "key": "10",
       "label": "10",
       "contest_id": "1238",
-      "rank_total": 0
+      "rank_total": 1080
     }
   ]
 }

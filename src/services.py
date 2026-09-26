@@ -626,7 +626,7 @@ def refresh_bound_hdu_multi_school_contests():
 
 
 def refresh_upcoming_contests():
-    starts_after = datetime.now() - timedelta(hours=24)
+    starts_after = datetime.now() - timedelta(hours=72)
     all_contests = []
     all_contests.extend(get_upcoming_codeforces_contests(starts_after))
     all_contests.extend(get_upcoming_atcoder_contests(starts_after))
